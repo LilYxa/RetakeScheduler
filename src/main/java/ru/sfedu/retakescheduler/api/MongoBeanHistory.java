@@ -18,6 +18,7 @@ import ru.sfedu.retakescheduler.model.Status;
 import ru.sfedu.retakescheduler.Constants;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.getProperty;
@@ -26,28 +27,45 @@ public class MongoBeanHistory {
 	private MongoDatabase database;
 	private HistoryContent historyContent;
 	private static final Logger log = LogManager.getLogger(MongoBeanHistory.class);
+	private String dbName;
 
 	public MongoBeanHistory() {
 		log.info("MongoBeanHistory [1]: class object created");
-		try  {
+		try {
+			mongoDbInitialize(getProperty(Constants.MONGO_DB_NAME));
+		} catch (IOException e) {
+			log.error("MongoBeanHistory[2]: error: {}", e.getMessage());
+		}
+	}
+
+	public MongoBeanHistory(String dbName) {
+		log.info("MongoBeanHistory [1]: class object created");
+		mongoDbInitialize(dbName);
+	}
+
+	private void mongoDbInitialize(String dbName) {
+		try {
 			MongoClientSettings settings = MongoClientSettings.builder()
 					.uuidRepresentation(UuidRepresentation.STANDARD)
 					.applyConnectionString(new ConnectionString(getProperty(Constants.MONGODB_PATH)))
 					.build();
 			MongoClient mongoClient = MongoClients.create(settings);
-			database = mongoClient.getDatabase(getProperty(Constants.MONGO_DB_NAME));
-
+			database = mongoClient.getDatabase(dbName);
 		} catch (IOException e) {
 			log.error("MongoBeanHistory [2]: {}", e.getMessage());
 		}
 	}
 
 	private HistoryContent createHistoryContent(Object object, String method, Status status) {
+		return createHistoryContent(object, method, Constants.ACTOR_CHANGED_OBJECT_DEFAULT, status);
+	}
+
+	private HistoryContent createHistoryContent(Object object, String method, String actor, Status status) {
 		HistoryContent history = new HistoryContent();
 		history.setId();
-		history.setClassName(object.getClass().getName());
-		history.setCreatedDate(new Date());
-		history.setActor(Constants.ACTOR_CHANGED_OBJECT_DEFAULT);
+		history.setClassName(object.getClass().getSimpleName());
+		history.setCreatedDate(LocalDateTime.now());
+		history.setActor(actor);
 		history.setMethodName(method);
 		history.setStatus(status);
 		history.setObject(objectToJsonArray(object));
@@ -74,6 +92,11 @@ public class MongoBeanHistory {
 
 	public void logObject(Object object, String method, Status status) {
 		historyContent = createHistoryContent(object, method, status);
+		save();
+	}
+
+	public void logObject(Object object, String method, String actor, Status status) {
+		historyContent = createHistoryContent(object, method, actor, status);
 		save();
 	}
 
@@ -105,16 +128,16 @@ public class MongoBeanHistory {
 
 	public List<Object> getObjectInDocumentByClassName(String className) {
 		log.info("getObjectInDocumentByClassName[1]: the method has been run, className = {}", className);
-		String finalClassName = Constants.MODEL_PATH + className;
+		String fullClassName = Constants.MODEL_PATH + className;
 
 		try (MongoClient mongoClient = MongoClients.create(getProperty(Constants.MONGODB_PATH))) {
 			database = mongoClient.getDatabase(getProperty(Constants.MONGO_DB_NAME));
 			MongoCollection<Document> collection = database.getCollection(getProperty(Constants.MONGODB_COLLECTION));
 
-			List<Document> historyContentObjects = collection.find(Filters.eq(Constants.MONGO_FIELD_CLASSNAME, finalClassName)).into(new ArrayList<>());
+			List<Document> historyContentObjects = collection.find(Filters.eq(Constants.MONGO_FIELD_CLASSNAME, className)).into(new ArrayList<>());
 
 			List<Map<String, Object>> objectList = new ArrayList<>();
-			Class<Object> objectClass = (Class<Object>) Class.forName(finalClassName);
+			Class<Object> objectClass = (Class<Object>) Class.forName(fullClassName);
 			for (Document historyObject : historyContentObjects) {
 				Map<String, Object> objectField = historyObject.get(Constants.MONGO_FIELD_OBJECT, Map.class);
 				objectList.add(objectField);

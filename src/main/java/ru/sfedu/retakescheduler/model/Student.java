@@ -1,9 +1,13 @@
 package ru.sfedu.retakescheduler.model;
 
+import com.opencsv.bean.CsvBindByPosition;
+
 import java.util.Objects;
 
 public class Student extends Person{
+	@CsvBindByPosition(position = 4)
 	private String studentId;
+	@CsvBindByPosition(position = 5)
 	private int finalRating;
 
 	public Student() {

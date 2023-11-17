@@ -4,22 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.Status;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class HistoryContent {
 //	private String Id;
 	private UUID Id;
 	private String className;
-	private Date createdDate;
-	private String actor;
+	private LocalDateTime createdDate;
+	private String actor = Constants.ACTOR_CHANGED_OBJECT_DEFAULT;
 	private String methodName;
 	private Map<String, Object> object;
 	private Status status;
 
 
 	private static final Logger log = LogManager.getLogger(HistoryContent.class);
+
+	public HistoryContent() {}
 
 	public UUID getId() {
 		return Id;
@@ -41,11 +45,11 @@ public class HistoryContent {
 		this.className = className;
 	}
 
-	public Date getCreatedDate() {
+	public LocalDateTime getCreatedDate() {
 		return createdDate;
 	}
 
-	public void setCreatedDate(Date createdDate) {
+	public void setCreatedDate(LocalDateTime createdDate) {
 		this.createdDate = createdDate;
 	}
 

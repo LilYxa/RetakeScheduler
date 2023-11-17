@@ -1,14 +1,22 @@
 package ru.sfedu.retakescheduler.model;
 
+import com.opencsv.bean.CsvBindByPosition;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 public class Group {
+
+	@CsvBindByPosition(position = 0)
 	private String groupNumber;
+	@CsvBindByPosition(position = 1)
 	private int course;
+	@CsvBindByPosition(position = 2)
 	private String levelOfTraining;
+	@CsvBindByPosition(position = 3)
 	private Date busyDay;
+	@CsvBindByPosition(position = 4)
 	private List<Student> students;
 
 	public Group() {

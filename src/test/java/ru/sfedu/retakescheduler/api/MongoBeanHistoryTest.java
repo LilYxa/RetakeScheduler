@@ -1,10 +1,11 @@
+package ru.sfedu.retakescheduler.api;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import static org.junit.Assert.*;
 import static ru.sfedu.retakescheduler.api.MongoBeanHistory.objectToJsonArray;
 
 import org.junit.Test;
-import ru.sfedu.retakescheduler.api.MongoBeanHistory;
 import ru.sfedu.retakescheduler.model.Person;
 import ru.sfedu.retakescheduler.model.Status;
 
@@ -43,25 +44,29 @@ public class MongoBeanHistoryTest {
 
 	@Test
 	public void testLogObject() {
-		log.info("testLogObject[1]: start test");
+		log.debug("testLogObject[1]: start test");
 
-		MongoBeanHistory mongoBeanHistory = new MongoBeanHistory();
+		MongoBeanHistory mongoBeanHistory1 = new MongoBeanHistory();
+		MongoBeanHistory mongoBeanHistory2 = new MongoBeanHistory("Test");
 		Person person1 = new Person("Doe", "John", "Petrovich", "john.doe@gmail.com");
 
 		Person person2 = new Person("Pupkin", "Vasya", "Ivanovich", "vasya.pupkin@gmail.com");
+		Person person3 = new Person("Ivanov", "Ivan", "Ivanovich", "ivan.ivanov@gmail.com");
 
 		log.debug("testLogObject[2]: person1 = {}", person1);
 		log.debug("testLogObject[3]: person2 = {}", person2);
+		log.debug("testLogObject[3]: person3 = {}", person3);
 
-		mongoBeanHistory.logObject(person1, "testLogObject", Status.SUCCESS);
-		mongoBeanHistory.logObject(person2, "testLogObject", Status.SUCCESS);
+		mongoBeanHistory1.logObject(person1, "testLogObject", Status.SUCCESS);
+		mongoBeanHistory1.logObject(person2, "testLogObject", Status.SUCCESS);
+		mongoBeanHistory2.logObject(person3, "testLogObject", "tester", Status.FAULT);
 
-		log.info("testLogObject[4]: finish test");
+		log.debug("testLogObject[4]: finish test");
 	}
 
 	@Test
 	public void testGetObjectInDocumentByClassName() {
-		log.info("testGetObjectInDocumentByClassName[1]: start test");
+		log.debug("testGetObjectInDocumentByClassName[1]: start test");
 
 		MongoBeanHistory mongoBeanHistory = new MongoBeanHistory();
 		List<Object> people = mongoBeanHistory.getObjectInDocumentByClassName("Person");
@@ -70,6 +75,6 @@ public class MongoBeanHistoryTest {
 
 		assertNotNull(people);
 
-		log.info("testGetObjectInDocumentByClassName[3]: finish test");
+		log.debug("testGetObjectInDocumentByClassName[3]: finish test");
 	}
 }

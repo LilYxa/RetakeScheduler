@@ -1,10 +1,14 @@
 package ru.sfedu.retakescheduler.model;
 
+import com.opencsv.bean.CsvBindByPosition;
+
 import java.util.Date;
 import java.util.Objects;
 
 public class Teacher extends Person{
+	@CsvBindByPosition(position = 4)
 	private String teacherId;
+	@CsvBindByPosition(position = 5)
 	private Date busyDay;
 
 	public Teacher() {
