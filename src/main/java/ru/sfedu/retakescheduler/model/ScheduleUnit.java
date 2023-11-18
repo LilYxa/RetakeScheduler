@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class ScheduleUnit {
+	private String scheduleUnitId;
 	private LocalDateTime dateTime;
 	private Subject subject;
 	private String location;
@@ -12,11 +13,20 @@ public class ScheduleUnit {
 	public ScheduleUnit() {
 	}
 
-	public ScheduleUnit(LocalDateTime dateTime, Subject subject, String location, Person person) {
+	public ScheduleUnit(String id, LocalDateTime dateTime, Subject subject, String location, Person person) {
+		this.scheduleUnitId = id;
 		this.dateTime = dateTime;
 		this.subject = subject;
 		this.location = location;
 		this.person = person;
+	}
+
+	public String getScheduleUnitId() {
+		return scheduleUnitId;
+	}
+
+	public void setScheduleUnitId(String scheduleUnitId) {
+		this.scheduleUnitId = scheduleUnitId;
 	}
 
 	public LocalDateTime getDateTime() {
@@ -56,12 +66,12 @@ public class ScheduleUnit {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ScheduleUnit that = (ScheduleUnit) o;
-		return Objects.equals(dateTime, that.dateTime) && Objects.equals(subject, that.subject) && Objects.equals(location, that.location) && Objects.equals(person, that.person);
+		return Objects.equals(scheduleUnitId, that.scheduleUnitId) && Objects.equals(dateTime, that.dateTime) && Objects.equals(subject, that.subject) && Objects.equals(location, that.location) && Objects.equals(person, that.person);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(dateTime, subject, location, person);
+		return Objects.hash(scheduleUnitId, dateTime, subject, location, person);
 	}
 
 	@Override

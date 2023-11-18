@@ -5,9 +5,11 @@ import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.Student;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
@@ -47,6 +49,9 @@ public class DataProviderCsvTest {
 		Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "VT-22022", 100);
 		Student student2 = new Student("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "VT-22023", 99);
 		Student student3 = new Student("Sidorov", "Sidor", "Sidorovich", "sidorov@mail.ru", "VT-22024", 110);
+		log.debug("testSaveStudent[2]: student1: {}", student1);
+		log.debug("testSaveStudent[3]: student2: {}", student2);
+		log.debug("testSaveStudent[4]: student3: {}", student3);
 		dataProviderCsv2.saveStudent(student1);
 		dataProviderCsv2.saveStudent(student2);
 		dataProviderCsv2.saveStudent(student3);
@@ -61,5 +66,18 @@ public class DataProviderCsvTest {
 			log.debug("testGetAllRecords[3] studentFirstName = {}", student.getFirstName());
 		}
 		log.debug("testGetAllRecords[4]: students: {}", res);
+	}
+
+	@Test
+	public void testGetObjectFields() {
+		log.debug("testGetObjectFields[1]: test start");
+		String[] expectedStudentColumns = {"lastName", "firstName", "patronymic", "email", "studentId", "finalRating"};
+		log.debug("testGetObjectFields[2]: expected fields: {}", Arrays.stream(expectedStudentColumns).toList());
+		Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "VT-22022", 100);
+
+		String[] actualStudentColumns = dataProviderCsv1.getObjectFields(student1);
+		assertEquals(expectedStudentColumns, actualStudentColumns);
+		log.debug("testGetObjectFields[3]: actual fields: {}", Arrays.stream(actualStudentColumns).toList());
+		log.debug("testGetObjectFields[4]: test finish");
 	}
 }

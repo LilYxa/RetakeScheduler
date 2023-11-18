@@ -31,6 +31,6 @@ public interface IDataProvider {
 	List<Teacher> getAllTeachers();
 	List<Group> getAllGroups();
 	List<ScheduleUnit> getAllScheduleUnits();
-	List<Subject> getAllSubjectId();
+	List<Subject> getAllSubjects();
 
 }

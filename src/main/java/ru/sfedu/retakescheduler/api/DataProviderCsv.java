@@ -3,10 +3,7 @@ package ru.sfedu.retakescheduler.api;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.bean.*;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.apache.logging.log4j.LogManager;
@@ -16,6 +13,9 @@ import ru.sfedu.retakescheduler.model.*;
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DataProviderCsv implements IDataProvider{
@@ -81,9 +81,48 @@ public class DataProviderCsv implements IDataProvider{
 					.build();
 			return csvToBean.parse();
 		} catch (IOException e) {
-			log.error("getAllRecords[2]: error: {}", e.getMessage());
+			log.error("getAllRecords[3]: error: {}", e.getMessage());
 		}
 		return null;
+	}
+
+	public <T> void save(T object, String pathToFile, Class<T> tClass, String[] columns) {
+		log.debug("save[1]: save {}: {}", object.getClass().getSimpleName(), object);
+		try (CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, true))) {
+			ColumnPositionMappingStrategy<T> mappingStrategy = new ColumnPositionMappingStrategy<>();
+			mappingStrategy.setType(tClass);
+			mappingStrategy.setColumnMapping(columns);
+
+			StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(writer)
+					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+					.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+					.withEscapechar(CSVWriter.DEFAULT_ESCAPE_CHARACTER)
+					.withMappingStrategy(mappingStrategy)
+					.build();
+			beanToCsv.write(object);
+		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
+			log.error("save[2]: error: {}", e.getMessage());
+		}
+	}
+
+//	public <T> boolean checkObjectExistenceInFile(String pathToFile, Class<T> tClass) {
+//		List<T> allObjects = getAllRecords(pathToFile, tClass);
+//		boolean recordExist = allObjects.stream().noneMatch(obj -> )
+//	}
+
+	public <T> String[] getObjectFields(T object) {
+		List<Field> childClassFields = Arrays.stream(object.getClass().getDeclaredFields()).toList();
+		List<Field> parentClassFields = Arrays.stream(object.getClass().getSuperclass().getDeclaredFields()).toList();
+
+		List<Field> allFields = new ArrayList<>();
+		allFields.addAll(parentClassFields);
+		allFields.addAll(childClassFields);
+
+		String[] columns = new String[allFields.size()];
+		for (int i = 0; i < columns.length; i++) {
+			columns[i] = allFields.get(i).getName();
+		}
+		return columns;
 	}
 
 	@Override
@@ -94,36 +133,76 @@ public class DataProviderCsv implements IDataProvider{
 	@Override
 	public void saveStudent(Student student) {
 		log.debug("saveStudent[1]: save Student: {}", student);
-		try (CSVWriter writer = new CSVWriter(new FileWriter(studentsFile, true))) {
-			StatefulBeanToCsv<Student> sbc = new StatefulBeanToCsvBuilder<Student>(writer)
-					.withQuotechar('\'')
-					.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
-					.build();
-			sbc.write(student);
 
-		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-			log.error("saveStudent[2]: error: {}", e.getMessage());
+		List<Student> students = getAllRecords(studentsFile, Student.class);
+		boolean isNotExist = students.stream().noneMatch(obj -> ((Student) obj).getStudentId().equals(student.getStudentId()));
+
+		if (isNotExist) {
+			students.add(student);
+			save(student, studentsFile, Student.class, getObjectFields(student));
+		} else {
+			log.error("saveStudent[2]: this student already exists");
 		}
 	}
 
 	@Override
 	public void saveTeacher(Teacher teacher) {
+		log.debug("saveTeacher[1]: save Teacher: {}", teacher);
 
+		List<Teacher> teachers = getAllRecords(teachersFile, Teacher.class);
+		boolean isNotExist = teachers.stream().noneMatch(obj -> ((Teacher) obj).getTeacherId().equals(teacher.getTeacherId()));
+
+		if (isNotExist) {
+			teachers.add(teacher);
+			save(teacher, teachersFile, Teacher.class, getObjectFields(teacher));
+		} else {
+			log.error("saveTeacher[2]: this teacher already exists");
+		}
 	}
 
 	@Override
 	public void saveGroup(Group group) {
+		log.debug("saveGroup[1]: save Group: {}", group);
 
+		List<Group> groups = getAllRecords(groupsFile, Group.class);
+		boolean isNotExist = groups.stream().noneMatch(obj -> ((Group) obj).getGroupNumber().equals(group.getGroupNumber()));
+
+		if (isNotExist) {
+			groups.add(group);
+			save(group, groupsFile, Group.class, getObjectFields(group));
+		} else {
+			log.error("saveGroup[2]: this group already exists");
+		}
 	}
 
 	@Override
 	public void saveScheduleUnit(ScheduleUnit scheduleUnit) {
+		log.debug("saveScheduleUnit[1]: save ScheduleUnit: {}", scheduleUnit);
 
+		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
+		boolean isNotExist = scheduleUnits.stream().noneMatch(obj -> ((ScheduleUnit) obj).getScheduleUnitId().equals(scheduleUnit.getScheduleUnitId()));
+
+		if (isNotExist) {
+			scheduleUnits.add(scheduleUnit);
+			save(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class, getObjectFields(scheduleUnit));
+		} else {
+			log.error("saveScheduleUnit[2]: this scheduleUnit already exists");
+		}
 	}
 
 	@Override
 	public void saveSubject(Subject subject) {
+		log.debug("saveSubject[1]: save Subject: {}", subject);
 
+		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
+		boolean isNotExist = subjects.stream().noneMatch(obj -> ((Subject) obj).getSubjectId().equals(subject.getSubjectId()));
+
+		if (isNotExist) {
+			subjects.add(subject);
+			save(subject, subjectsFile, Subject.class, getObjectFields(subject));
+		} else {
+			log.error("saveSubject[2]: this subject already exists");
+		}
 	}
 
 	@Override
@@ -193,26 +272,26 @@ public class DataProviderCsv implements IDataProvider{
 
 	@Override
 	public List<Student> getAllStudents() {
-		return null;
+		return getAllRecords(studentsFile, Student.class);
 	}
 
 	@Override
 	public List<Teacher> getAllTeachers() {
-		return null;
+		return getAllRecords(teachersFile, Teacher.class);
 	}
 
 	@Override
 	public List<Group> getAllGroups() {
-		return null;
+		return getAllRecords(groupsFile, Group.class);
 	}
 
 	@Override
 	public List<ScheduleUnit> getAllScheduleUnits() {
-		return null;
+		return getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
 	}
 
 	@Override
-	public List<Subject> getAllSubjectId() {
-		return null;
+	public List<Subject> getAllSubjects() {
+		return getAllRecords(subjectsFile, Subject.class);
 	}
 }
