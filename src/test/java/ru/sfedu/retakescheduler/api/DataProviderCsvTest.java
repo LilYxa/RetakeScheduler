@@ -80,4 +80,15 @@ public class DataProviderCsvTest {
 		log.debug("testGetObjectFields[3]: actual fields: {}", Arrays.stream(actualStudentColumns).toList());
 		log.debug("testGetObjectFields[4]: test finish");
 	}
+
+	@Test
+	public void testDeleteStudent() {
+		log.debug("testDeleteStudents[1]: test start");
+		List<Student> studentsBeforeDelete = dataProviderCsv2.getAllStudents();
+		log.debug("testDeleteStudents[2]: students before removing: {}", studentsBeforeDelete);
+		Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "VT-22022", 100);
+		dataProviderCsv2.deleteStudent(student1);
+		List<Student> studentsAfterDelete = dataProviderCsv2.getAllStudents();
+		log.debug("testDeleteStudents[3]: students after removing: {}", studentsAfterDelete);
+	}
 }

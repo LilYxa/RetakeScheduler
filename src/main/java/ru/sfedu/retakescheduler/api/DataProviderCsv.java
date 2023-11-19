@@ -21,7 +21,7 @@ import java.util.List;
 public class DataProviderCsv implements IDataProvider{
 
 	private static final Logger log = LogManager.getLogger(DataProviderCsv.class);
-	private final MongoBeanHistory logObject = new MongoBeanHistory();
+	private final MongoBeanHistory loggingObject = new MongoBeanHistory();
 
 	private final String studentsFile;
 	private final String teachersFile;
@@ -102,6 +102,25 @@ public class DataProviderCsv implements IDataProvider{
 			beanToCsv.write(object);
 		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
 			log.error("save[2]: error: {}", e.getMessage());
+		}
+	}
+
+	public <T> void saveRecords(List<T> list, String pathToFile, Class<T> tClass, String[] columns) {
+		log.debug("saveRecords[1]: save records: {}", list);
+		try (CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, false))) {
+			ColumnPositionMappingStrategy<T> mappingStrategy = new ColumnPositionMappingStrategy<>();
+			mappingStrategy.setType(tClass);
+			mappingStrategy.setColumnMapping(columns);
+
+			StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(writer)
+					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+					.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+					.withEscapechar(CSVWriter.DEFAULT_ESCAPE_CHARACTER)
+					.withMappingStrategy(mappingStrategy)
+					.build();
+			beanToCsv.write(list);
+		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
+			log.error("saveRecords[2]: error: {}", e.getMessage());
 		}
 	}
 
@@ -212,7 +231,23 @@ public class DataProviderCsv implements IDataProvider{
 
 	@Override
 	public void deleteStudent(Student student) {
+		log.debug("deleteStudent[1]: delete student: {}", student);
 
+		loggingObject.logObject(student, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		List<Student> students = getAllRecords(studentsFile, Student.class);
+
+		boolean result = students.remove(student);
+		log.debug("deleteStudent[2]: student was deleted: {}", result);
+
+		File oldFile = new File(studentsFile);
+		File newFile = new File(studentsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteStudent[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(students, newFile.getPath(), Student.class, getObjectFields(student));
+		log.debug("deleteStudent[4]: new file {} was created", newFile.getName());
 	}
 
 	@Override

@@ -1,13 +1,20 @@
 package ru.sfedu.retakescheduler.model;
 
+import com.opencsv.bean.CsvBindByPosition;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class ScheduleUnit {
+	@CsvBindByPosition(position = 0)
 	private String scheduleUnitId;
+	@CsvBindByPosition(position = 1)
 	private LocalDateTime dateTime;
+	@CsvBindByPosition(position = 2)
 	private Subject subject;
+	@CsvBindByPosition(position = 3)
 	private String location;
+	@CsvBindByPosition(position = 4)
 	private Person person;
 
 	public ScheduleUnit() {
