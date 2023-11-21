@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.Student;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -90,5 +91,43 @@ public class DataProviderCsvTest {
 		dataProviderCsv2.deleteStudent(student1);
 		List<Student> studentsAfterDelete = dataProviderCsv2.getAllStudents();
 		log.debug("testDeleteStudents[3]: students after removing: {}", studentsAfterDelete);
+	}
+
+	@Test
+	public void testDeleteObject() {
+		log.debug("testDeleteObject[1]: test start");
+		List<Student> studentsBeforeDelete = dataProviderCsv2.getAllStudents();
+		log.debug("testDeleteObject[2]: students before removing: {}", studentsBeforeDelete);
+		Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "VT-22022", 100);
+		dataProviderCsv2.deleteObject(student1, studentsFile);
+		List<Student> studentsAfterDelete = dataProviderCsv2.getAllStudents();
+
+		List<Student> expectedStudentsAfterDelete = new ArrayList<>();
+		Student student2 = new Student("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "VT-22023", 99);
+		Student student3 = new Student("Sidorov", "Sidor", "Sidorovich", "sidorov@mail.ru", "VT-22024", 110);
+		expectedStudentsAfterDelete.add(student2);
+		expectedStudentsAfterDelete.add(student3);
+		assertEquals(expectedStudentsAfterDelete, studentsAfterDelete);
+
+		log.debug("testDeleteStudents[3]: students after removing: {}", studentsAfterDelete);
+	}
+
+	@Test
+	public void testGetStudentByIdPositive() {
+		log.debug("testGetStudentByIdPositive[1]: test start");
+		Student expectedStudent = new Student("Sidorov", "Sidor", "Sidorovich", "sidorov@mail.ru", "VT-22024", 110);
+
+		log.debug("testGetStudentByIdPositive[2]: expected student: {}", expectedStudent);
+		Student actualStudent = dataProviderCsv2.getStudentById(expectedStudent.getStudentId());
+		log.debug("testGetStudentByIdPositive[3]: actual student: {}", actualStudent);
+		assertEquals(expectedStudent, actualStudent);
+	}
+
+	@Test
+	public void testGetStudentByIdNegative() {
+		log.debug("testGetStudentByIdNegative[1]: test start");
+
+		Student actualStudent = dataProviderCsv2.getStudentById("12345");
+		assertNull(actualStudent);
 	}
 }

@@ -17,6 +17,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.function.Function;
 
 public class DataProviderCsv implements IDataProvider{
 
@@ -49,7 +51,7 @@ public class DataProviderCsv implements IDataProvider{
 	public DataProviderCsv(String pathToCsv) {
 		log.debug("DataProviderCsv[1]: created DataProviderCsv");
 //		String finalFolder = pathToCsv.concat(Constants.CSV_FOLDER_PATH);
-		String finalFolder = pathToCsv.equals(Constants.CSV_FOLDER_PATH) ? Constants.CSV_FOLDER_PATH : pathToCsv.concat(Constants.CSV_FOLDER_PATH);
+		String finalFolder = pathToCsv.equals(Constants.CSV_FOLDER_PATH) ? Constants.CSV_FOLDER_PATH : pathToCsv.concat(Constants.CSV_FOLDER);
 		studentsFile = finalFolder.concat(Constants.STUDENT_FILE).concat(Constants.CSV_FILE_TYPE);
 		teachersFile = finalFolder.concat(Constants.TEACHER_FILE).concat(Constants.CSV_FILE_TYPE);
 		groupsFile = finalFolder.concat(Constants.GROUP_FILE).concat(Constants.CSV_FILE_TYPE);
@@ -250,24 +252,106 @@ public class DataProviderCsv implements IDataProvider{
 		log.debug("deleteStudent[4]: new file {} was created", newFile.getName());
 	}
 
+	public <T> void deleteObject(T object, String filePath) {
+		log.debug("deleteObject[1]: object type: {}, object: {}", object.getClass().getSimpleName(), object);
+		loggingObject.logObject(object, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+		List<T> objects = getAllRecords(filePath, (Class<T>) object.getClass());
+
+		boolean recordDeleteResult = objects.remove(object);
+		log.debug("deleteObject[2]: object {} was deleted: {}", object.getClass().getSimpleName(), recordDeleteResult);
+
+		File oldFile = new File(filePath);
+		File newFile = new File(filePath);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteObject[3] old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(objects, newFile.getPath(), (Class<T>) object.getClass(), getObjectFields(object));
+		log.debug("deleteObject[4]: new file {} was created", newFile.getName());
+	}
+
 	@Override
 	public void deleteTeacher(Teacher teacher) {
+		log.debug("deleteTeacher[1]: delete teacher: {}", teacher);
 
+		loggingObject.logObject(teacher, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		List<Teacher> teachers = getAllRecords(teachersFile, Teacher.class);
+
+		boolean result = teachers.remove(teacher);
+		log.debug("deleteTeacher[2]: teacher was deleted: {}", result);
+
+		File oldFile = new File(teachersFile);
+		File newFile = new File(teachersFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteTeacher[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(teachers, newFile.getPath(), Teacher.class, getObjectFields(teacher));
+		log.debug("deleteStudent[4]: new file {} was created", newFile.getName());
 	}
 
 	@Override
 	public void deleteGroup(Group group) {
+		log.debug("deleteGroup[1]: delete group: {}", group);
 
+		loggingObject.logObject(group, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		List<Group> groups = getAllRecords(groupsFile, Group.class);
+
+		boolean result = groups.remove(group);
+		log.debug("deleteGroup[2]: group was deleted: {}", result);
+
+		File oldFile = new File(groupsFile);
+		File newFile = new File(groupsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteGroup[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(groups, newFile.getPath(), Group.class, getObjectFields(group));
+		log.debug("deleteGroup[4]: new file {} was created", newFile.getName());
 	}
 
 	@Override
 	public void deleteScheduleUnit(ScheduleUnit scheduleUnit) {
+		log.debug("deleteScheduleUnit[1]: delete scheduleUnit: {}", scheduleUnit);
 
+		loggingObject.logObject(scheduleUnit, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
+
+		boolean result = scheduleUnits.remove(scheduleUnit);
+		log.debug("deleteScheduleUnit[2]: scheduleUnit was deleted: {}", result);
+
+		File oldFile = new File(scheduleUnitsFile);
+		File newFile = new File(scheduleUnitsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteScheduleUnits[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(scheduleUnits, newFile.getPath(), ScheduleUnit.class, getObjectFields(scheduleUnit));
+		log.debug("deleteScheduleUnit[4]: new file {} was created", newFile.getName());
 	}
 
 	@Override
 	public void deleteSubject(Subject subject) {
+		log.debug("deleteSubject[1]: delete subject: {}", subject);
 
+		loggingObject.logObject(subject, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
+
+		boolean result = subjects.remove(subject);
+		log.debug("deleteSubject[2]: subject was deleted: {}", result);
+
+		File oldFile = new File(subjectsFile);
+		File newFile = new File(subjectsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteSubject[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(subjects, newFile.getPath(), Subject.class, getObjectFields(subject));
+		log.debug("deleteSubject[4]: new file {} was created", newFile.getName());
 	}
 
 	@Override
@@ -275,29 +359,100 @@ public class DataProviderCsv implements IDataProvider{
 		return null;
 	}
 
+	private <T> T getObjectById(String id, Class<T> tClass, String filePath, Function<T, String> idExtractor) {
+		log.debug("getObjectById[1]: object {}, id = {}", tClass.getSimpleName(), id);
+		List<T> objects = getAllRecords(filePath, tClass);
+		T result = null;
+		try {
+			result = objects.stream()
+					.filter(object -> idExtractor.apply(object).equals(id))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("getObjectById[2]: error: {}", e.getMessage());
+		}
+		return result;
+	}
+
 	@Override
 	public Student getStudentById(String id) {
-		return null;
+//		log.debug("getStudentById[1]: id = {}", id);
+//		List<Student> students = getAllRecords(studentsFile, Student.class);
+//		Student searchedStudent = null;
+//		try {
+//			searchedStudent = students.stream()
+//					.filter(student -> student.getStudentId().equals(id))
+//					.findFirst()
+//					.get();
+//		} catch (NoSuchElementException e) {
+//			log.error("getStudentById[2]: error: {}", e.getMessage());
+//		}
+//		return searchedStudent;
+		return getObjectById(id, Student.class, studentsFile, Student::getStudentId);
 	}
 
 	@Override
 	public Teacher getTeacherById(String id) {
-		return null;
+		log.debug("getTeacherById[1]: id = {}", id);
+		List<Teacher> teachers = getAllRecords(teachersFile, Teacher.class);
+		Teacher searchedTeacher = null;
+		try {
+			searchedTeacher = teachers.stream()
+					.filter(teacher -> teacher.getTeacherId().equals(id))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("getTeacherById[2]: error: {}", e.getMessage());
+		}
+		return searchedTeacher;
 	}
 
 	@Override
 	public Group getGroupById(String id) {
-		return null;
+		log.debug("getGroupById[1]: id = {}", id);
+		List<Group> groups = getAllRecords(groupsFile, Group.class);
+		Group searchedGroup = null;
+		try {
+			searchedGroup = groups.stream()
+					.filter(group -> group.getGroupNumber().equals(id))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("getGroupById[2]: error: {}", e.getMessage());
+		}
+		return searchedGroup;
 	}
 
 	@Override
 	public ScheduleUnit getScheduleUnitById(String id) {
-		return null;
+		log.debug("getScheduleUnitById[1]: id = {}", id);
+		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
+		ScheduleUnit searchedScheduleUnit = null;
+		try {
+			searchedScheduleUnit = scheduleUnits.stream()
+					.filter(scheduleUnit -> scheduleUnit.getScheduleUnitId().equals(id))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("getScheduleUnitById[2]: error: {}", e.getMessage());
+		}
+		return searchedScheduleUnit;
 	}
 
 	@Override
 	public Subject getSubjectById(String id) {
-		return null;
+		log.debug("getSubjectById[1]: id = {}", id);
+		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
+		Subject searchedSubject = null;
+		try {
+			searchedSubject = subjects.stream()
+					.filter(subject -> subject.getSubjectId().equals(id))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("getSubjectById[2]: error: {}", e.getMessage());
+		}
+		return searchedSubject;
 	}
 
 	@Override

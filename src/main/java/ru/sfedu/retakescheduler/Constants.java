@@ -21,7 +21,8 @@ public class Constants {
 	public static final String MONGO_FIELD_STATUS = "status";
 	public static final String MODEL_PATH = "ru.sfedu.retakescheduler.model.";
 
-	public static final String CSV_FOLDER_PATH = "csv/";
+	public static final String CSV_FOLDER_PATH = "src/main/resources/csv/";
+	public static final String CSV_FOLDER = "csv/";
 	public static final String CSV_FILE_TYPE = ".csv";
 	public static final String TEST_FOLDER_PATH = "src/test/testFolder/";
 
@@ -31,4 +32,8 @@ public class Constants {
 	public static final String GROUP_FILE = "groups";
 	public static final String SCHEDULE_UNIT_FILE = "scheduleUnits";
 	public static final String SUBJECT_FILE = "subjects";
+
+	public static final String DEBTORS_EXCEL_FILE = "debtors";
+	public static final String EXCEL_FOLDER = "src/main/resources/excel";
+	public static final String EXCEL_FILE_TYPE = ".xls";
 }
