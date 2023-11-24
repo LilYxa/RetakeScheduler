@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class FileUtil {
 	private static final Logger log = LogManager.getLogger(FileUtil.class);
@@ -37,5 +38,10 @@ public class FileUtil {
 		} else {
 			log.debug("deleteFileOrFolder[2]: file or folder {} doesn't exist", file.getAbsolutePath());
 		}
+	}
+
+	public static List<File> getListFilesInFolder(String pathToFolder) {
+		File folder = new File(pathToFolder);
+		return List.<File>of(folder.listFiles());
 	}
 }

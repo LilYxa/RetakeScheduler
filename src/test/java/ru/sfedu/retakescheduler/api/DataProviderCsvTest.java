@@ -7,8 +7,13 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import ru.sfedu.retakescheduler.Constants;
+import ru.sfedu.retakescheduler.model.ExcelRow;
 import ru.sfedu.retakescheduler.model.Student;
+import ru.sfedu.retakescheduler.utils.ExcelUtil;
+import ru.sfedu.retakescheduler.utils.FileUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -129,5 +134,14 @@ public class DataProviderCsvTest {
 
 		Student actualStudent = dataProviderCsv2.getStudentById("12345");
 		assertNull(actualStudent);
+	}
+
+	@Test
+	public void testDataLoading() throws IOException {
+		log.debug("testDataLoading[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		List<List<?>> result = dataProviderCsv2.dataLoading(file.getPath());
+		log.debug("testDataLoading[2]: list after loading: {}", result);
 	}
 }

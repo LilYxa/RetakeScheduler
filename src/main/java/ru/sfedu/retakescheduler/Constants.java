@@ -34,6 +34,6 @@ public class Constants {
 	public static final String SUBJECT_FILE = "subjects";
 
 	public static final String DEBTORS_EXCEL_FILE = "debtors";
-	public static final String EXCEL_FOLDER = "src/main/resources/excel";
-	public static final String EXCEL_FILE_TYPE = ".xls";
+	public static final String EXCEL_FOLDER = "src/main/resources/excel/";
+	public static final String EXCEL_FILE_TYPE = ".xls.xlsx";
 }

@@ -10,6 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
+import ru.sfedu.retakescheduler.utils.ExcelUtil;
+
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 
 import java.io.*;
@@ -19,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DataProviderCsv implements IDataProvider{
 
@@ -484,4 +487,52 @@ public class DataProviderCsv implements IDataProvider{
 	public List<Subject> getAllSubjects() {
 		return getAllRecords(subjectsFile, Subject.class);
 	}
+
+	@Override
+	public void dataTransform(String sourceFilePath) {
+
+	}
+
+	public List<List<?>> dataLoading(String filePath) {
+		List<List<?>> resultList = new ArrayList<>();
+		List<ExcelRow> excelRows = new ArrayList<>();
+		log.debug("dataLoading[1]: data loading from file: {}", filePath);
+		try {
+			excelRows = ExcelUtil.readFromExcel(filePath);
+		} catch (IOException e) {
+			log.error("dataLoading[2]: error: {}", e.getMessage());
+		}
+
+		List<Student> students = convertToStudents(excelRows);
+		log.debug("dataLoading[3]: list of students: {}", students);
+		resultList.add(students);
+		return resultList;
+	}
+
+	private List<Student> convertToStudents(List<ExcelRow> excelRows) {
+		return excelRows.stream()
+				.map(this::convertToStudent)
+				.collect(Collectors.toList());
+	}
+
+	private Student convertToStudent(ExcelRow excelRow) {
+		Student student = new Student();
+		String[] studentName = excelRow.getStudentName().split(" ");
+		if (studentName.length >= 3) {
+			student.setLastName(studentName[0]);
+			student.setFirstName(studentName[1]);
+			student.setPatronymic(studentName[2]);
+		} else if (studentName.length == 2) {
+			// не хватает отчества
+			student.setLastName(studentName[0]);
+			student.setFirstName(studentName[1]);
+		} else if (studentName.length == 1) {
+			// не хватает и имени и отчества
+			student.setLastName(studentName[0]);
+		}
+		student.setFinalRating(excelRow.getFinalRating());
+		return student;
+	}
+
+
 }

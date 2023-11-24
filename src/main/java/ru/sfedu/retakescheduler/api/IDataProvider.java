@@ -33,4 +33,6 @@ public interface IDataProvider {
 	List<ScheduleUnit> getAllScheduleUnits();
 	List<Subject> getAllSubjects();
 
+	void dataTransform(String sourceFilePath);
+
 }
