@@ -3,6 +3,7 @@ package ru.sfedu.retakescheduler.model;
 import com.opencsv.bean.CsvBindByPosition;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public class Subject {
 	@CsvBindByPosition(position = 0)
@@ -13,12 +14,24 @@ public class Subject {
 	private String controlType;
 
 	public Subject() {
+		this.subjectId = UUID.randomUUID().toString();
 	}
 
 	public Subject(String subjectId, String subjectName, String controlType) {
 		this.subjectId = subjectId;
 		this.subjectName = subjectName;
 		this.controlType = controlType;
+	}
+
+	public Subject(String subjectName, String controlType) {
+		this.subjectId = UUID.randomUUID().toString();
+		this.subjectName = subjectName;
+		this.controlType = controlType;
+	}
+
+	public Subject(String subjectName) {
+		this.subjectId = UUID.randomUUID().toString();
+		this.subjectName = subjectName;
 	}
 
 	public String getSubjectId() {

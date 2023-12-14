@@ -1,31 +1,65 @@
 package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
+import com.opencsv.bean.CsvDate;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 public class ScheduleUnit {
 	@CsvBindByPosition(position = 0)
 	private String scheduleUnitId;
 	@CsvBindByPosition(position = 1)
+	@CsvDate(value = "yyyy-MM-dd'T'HH:mm")
 	private LocalDateTime dateTime;
 	@CsvBindByPosition(position = 2)
-	private Subject subject;
+//	private Subject subject;
+	private String subjectId;
 	@CsvBindByPosition(position = 3)
 	private String location;
 	@CsvBindByPosition(position = 4)
-	private Person person;
+//	private Person person;
+	private String personId;
+	@CsvBindByPosition(position = 5)
+//	private Group group;
+	private String groupNumber;
 
 	public ScheduleUnit() {
+		this.scheduleUnitId = UUID.randomUUID().toString();
 	}
 
-	public ScheduleUnit(String id, LocalDateTime dateTime, Subject subject, String location, Person person) {
+	public ScheduleUnit(String id, LocalDateTime dateTime, String subjectId, String location, String personId, String groupId) {
 		this.scheduleUnitId = id;
 		this.dateTime = dateTime;
-		this.subject = subject;
+//		this.subject = subject;
+		this.subjectId = subjectId;
 		this.location = location;
-		this.person = person;
+//		this.person = person;
+		this.personId = personId;
+//		this.group = group;
+		this.groupNumber = groupId;
+	}
+
+//	public ScheduleUnit(LocalDateTime dateTime, Subject subject, String location, Person person, Group group) {
+//		this.scheduleUnitId = UUID.randomUUID().toString();
+//		this.dateTime = dateTime;
+//		this.subject = subject;
+//		this.location = location;
+//		this.person = person;
+//		this.group = group;
+//	}
+
+	public ScheduleUnit(LocalDateTime dateTime, String subjectId, String location, String personId, String groupId) {
+		this.scheduleUnitId = UUID.randomUUID().toString();
+		this.dateTime = dateTime;
+//		this.subject = subject;
+		this.subjectId = subjectId;
+		this.location = location;
+//		this.person = person;
+		this.personId = personId;
+//		this.group = group;
+		this.groupNumber = groupId;
 	}
 
 	public String getScheduleUnitId() {
@@ -44,12 +78,12 @@ public class ScheduleUnit {
 		this.dateTime = dateTime;
 	}
 
-	public Subject getSubject() {
-		return subject;
+	public String getSubjectId() {
+		return subjectId;
 	}
 
-	public void setSubject(Subject subject) {
-		this.subject = subject;
+	public void setSubjectId(String subjectId) {
+		this.subjectId = subjectId;
 	}
 
 	public String getLocation() {
@@ -60,12 +94,20 @@ public class ScheduleUnit {
 		this.location = location;
 	}
 
-	public Person getPerson() {
-		return person;
+	public String getPersonId() {
+		return personId;
 	}
 
-	public void setPerson(Person person) {
-		this.person = person;
+	public void setPersonId(String personId) {
+		this.personId = personId;
+	}
+
+	public String getGroupNumber() {
+		return groupNumber;
+	}
+
+	public void setGroupNumber(String groupNumber) {
+		this.groupNumber = groupNumber;
 	}
 
 	@Override
@@ -73,21 +115,23 @@ public class ScheduleUnit {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ScheduleUnit that = (ScheduleUnit) o;
-		return Objects.equals(scheduleUnitId, that.scheduleUnitId) && Objects.equals(dateTime, that.dateTime) && Objects.equals(subject, that.subject) && Objects.equals(location, that.location) && Objects.equals(person, that.person);
+		return Objects.equals(scheduleUnitId, that.scheduleUnitId) && Objects.equals(dateTime, that.dateTime) && Objects.equals(subjectId, that.subjectId) && Objects.equals(location, that.location) && Objects.equals(personId, that.personId) && Objects.equals(groupNumber, that.groupNumber);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(scheduleUnitId, dateTime, subject, location, person);
+		return Objects.hash(scheduleUnitId, dateTime, subjectId, location, personId, groupNumber);
 	}
 
 	@Override
 	public String toString() {
 		return "ScheduleUnit{" +
-				"dateTime=" + dateTime +
-				", subject=" + subject +
+				"scheduleUnitId='" + scheduleUnitId + '\'' +
+				", dateTime=" + dateTime +
+				", subjectId='" + subjectId + '\'' +
 				", location='" + location + '\'' +
-				", person=" + person +
+				", personId='" + personId + '\'' +
+				", groupNumber='" + groupNumber + '\'' +
 				'}';
 	}
 }

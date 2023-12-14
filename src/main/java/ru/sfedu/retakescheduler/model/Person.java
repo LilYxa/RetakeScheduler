@@ -25,6 +25,12 @@ public class Person {
 		this.email = email;
 	}
 
+	public Person(String lastName, String firstName, String patronymic) {
+		this.lastName = lastName;
+		this.firstName = firstName;
+		this.patronymic = patronymic;
+	}
+
 	public String getLastName() {
 		return lastName;
 	}

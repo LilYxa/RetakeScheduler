@@ -2,10 +2,10 @@ package ru.sfedu.retakescheduler.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import static org.junit.Assert.*;
 import static ru.sfedu.retakescheduler.api.MongoBeanHistory.objectToJsonArray;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import ru.sfedu.retakescheduler.model.Person;
 import ru.sfedu.retakescheduler.model.Status;
 

@@ -2,8 +2,10 @@ package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class Group {
@@ -15,14 +17,15 @@ public class Group {
 	@CsvBindByPosition(position = 2)
 	private String levelOfTraining;
 	@CsvBindByPosition(position = 3)
-	private Date busyDay;
-	@CsvBindByPosition(position = 4)
+	private LocalDate busyDay;
+//	@CsvBindByPosition(position = 4)
+//	@CsvBindAndSplitByPosition(position = 4, required = true, elementType = Student.class, splitOn = ",")
 	private List<Student> students;
 
 	public Group() {
 	}
 
-	public Group(String groupNumber, int course, String levelOfTraining, Date busyDay, List<Student> students) {
+	public Group(String groupNumber, int course, String levelOfTraining, LocalDate busyDay, List<Student> students) {
 		this.groupNumber = groupNumber;
 		this.course = course;
 		this.levelOfTraining = levelOfTraining;
@@ -54,11 +57,11 @@ public class Group {
 		this.levelOfTraining = levelOfTraining;
 	}
 
-	public Date getBusyDay() {
+	public LocalDate getBusyDay() {
 		return busyDay;
 	}
 
-	public void setBusyDay(Date busyDay) {
+	public void setBusyDay(LocalDate busyDay) {
 		this.busyDay = busyDay;
 	}
 

@@ -1,23 +1,40 @@
 package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
+import com.opencsv.bean.CsvDate;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Teacher extends Person{
 	@CsvBindByPosition(position = 4)
 	private String teacherId;
+
 	@CsvBindByPosition(position = 5)
-	private Date busyDay;
+	@CsvDate("yyyy-MM-dd")
+	private LocalDate busyDay;
 
 	public Teacher() {
+		this.teacherId = UUID.randomUUID().toString();
 	}
 
-	public Teacher(String lastName, String firstName, String patronymic, String email, String teacherId, Date busyDay) {
+	public Teacher(String lastName, String firstName, String patronymic, String email, String teacherId, LocalDate busyDay) {
 		super(lastName, firstName, patronymic, email);
 		this.teacherId = teacherId;
 		this.busyDay = busyDay;
+	}
+
+	public Teacher(String lastName, String firstName, String patronymic, String email, LocalDate busyDay) {
+		super(lastName, firstName, patronymic, email);
+		this.teacherId = UUID.randomUUID().toString();
+		this.busyDay = busyDay;
+	}
+
+	public Teacher(String lastName, String firstName, String patronymic) {
+		super(lastName, firstName, patronymic);
+		this.teacherId = UUID.randomUUID().toString();
 	}
 
 	public String getTeacherId() {
@@ -28,11 +45,11 @@ public class Teacher extends Person{
 		this.teacherId = teacherId;
 	}
 
-	public Date getBusyDay() {
+	public LocalDate getBusyDay() {
 		return busyDay;
 	}
 
-	public void setBusyDay(Date busyDay) {
+	public void setBusyDay(LocalDate busyDay) {
 		this.busyDay = busyDay;
 	}
 
