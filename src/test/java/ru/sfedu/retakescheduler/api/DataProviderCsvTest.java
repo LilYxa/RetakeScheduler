@@ -22,8 +22,10 @@ import java.time.LocalTime;
 import java.util.*;
 
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
+import static ru.sfedu.retakescheduler.utils.DataUtil.*;
+import static ru.sfedu.retakescheduler.utils.CsvUtil.*;
 
-public class DataProviderCsvTest {
+public class DataProviderCsvTest extends BaseTest {
 
 	private static String studentsFile;
 	private static String teachersFile;
@@ -38,12 +40,12 @@ public class DataProviderCsvTest {
 	Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "53b51af6-04df-4af5-8bdb-499436bc575a", 77.5);
 	Student student2 = new Student("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "8bccaa52-ef8c-4b1a-879f-10c6dfea861d", 94.6);
 	final Student student3 = new Student("Sidorov", "Sidor", "Sidorovich","sidorov@mail.ru", "1e1d663e-29d4-4599-a2a2-18723e47f560", 88.8);
-	Teacher teacher = new Teacher("Васильев", "Иван", "Николаевич", "vasiliev@mail.ru", "teach1", LocalDate.now());
-	Teacher teacher2 = new Teacher("Васильев", "Вася", "Николаевич", "vasi@mail.ru", "teach2", LocalDate.now());
-	Teacher teacher3 = new Teacher("Васил", "Иван", "Николаевич", "va@mail.ru", "teach3", LocalDate.now());
-	Group group = new Group("22ВТ-12.03.01.01-о1", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Group group2 = new Group("22ВТ-12.03.01.01-о2", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Group group3 = new Group("22ВТ-12.03.01.01-о3", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
+	Teacher teacher = new Teacher("Васильев", "Иван", "Николаевич", "vasiliev@mail.ru", "teach1", LocalDate.of(2023, 12, 12));
+	Teacher teacher2 = new Teacher("Васильев", "Вася", "Николаевич", "vasi@mail.ru", "teach2", LocalDate.of(2023, 12, 14));
+	Teacher teacher3 = new Teacher("Васил", "Иван", "Николаевич", "va@mail.ru", "teach3", LocalDate.of(2023, 12, 15));
+	Group group = new Group("22ВТ-12.03.01.01-о1", 1, "Бакалавриат", LocalDate.of(2023, 12, 12), new ArrayList<>(Arrays.asList(student1, student2, student3)));
+	Group group2 = new Group("22ВТ-12.03.01.01-о2", 1, "Бакалавриат", LocalDate.of(2023, 12, 12), new ArrayList<>(Arrays.asList(student1, student2, student3)));
+	Group group3 = new Group("22ВТ-12.03.01.01-о3", 1, "Бакалавриат", LocalDate.of(2023, 12, 12), new ArrayList<>(Arrays.asList(student1, student2, student3)));
 	Subject subject = new Subject("q2dw1", "Математика", "Экзамен");
 	Subject subject2 = new Subject("q2dw1fddxfd", "Физика", "Экзамен");
 	Subject subject3 = new Subject("q2dw1kjb", "История", "Экзамен");
@@ -104,7 +106,7 @@ public class DataProviderCsvTest {
 	public void testSaveStudentNegative() throws Exception {
 		log.debug("testSaveStudentNegative[1]: test start");
 		log.debug("testSaveStudentNegative[2]: student1: {}", student1);
-		dataProviderCsv2.saveStudent(student1);
+//		dataProviderCsv2.saveStudent(student1);
 		Exception exception = assertThrows(Exception.class, () -> {
 			dataProviderCsv2.saveStudent(student1);
 		});
@@ -173,7 +175,7 @@ public class DataProviderCsvTest {
 	public void testSaveGroupNegative() throws Exception {
 		log.debug("testSaveGroupNegative[1]: test start");
 		log.debug("testSaveGroupNegative[2]: group1: {}", group);
-		dataProviderCsv2.saveGroup(group);
+//		dataProviderCsv2.saveGroup(group);
 		Exception exception = assertThrows(Exception.class, () -> {
 			dataProviderCsv2.saveGroup(group);
 		});
@@ -196,11 +198,11 @@ public class DataProviderCsvTest {
 	public void testSaveScheduleUnitNegative() throws Exception {
 		log.debug("testSaveScheduleUnitNegative[1]: test start");
 		log.debug("testSaveScheduleUnitNegative[2]: scheduleUnit1: {}", scheduleUnit);
-		dataProviderCsv2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
+//		dataProviderCsv2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		Exception exception = assertThrows(Exception.class, () -> {
 			dataProviderCsv2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		});
-		assertEquals("this schedule unit already exists", exception.getMessage());
+		assertEquals("this scheduleUnit already exists", exception.getMessage());
 	}
 
 	@Test
@@ -216,8 +218,29 @@ public class DataProviderCsvTest {
 	@Test
 	public void testGetStudentByIdNegative() {
 		log.debug("testGetStudentByIdNegative[1]: test start");
-		Student actualStudent = dataProviderCsv2.getStudentById("12345");
-		assertNull(actualStudent);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.getStudentById("12345");
+		});
+		assertEquals("there is no student with this id", exception.getMessage());
+	}
+
+	@Test
+	public void testGetTeacherByIdPositive() throws Exception {
+		log.debug("testGetTeacherByIdPositive[1]: test start");
+		dataProviderCsv2.saveTeacher(teacher3);
+		log.debug("testGetTeacherByIdPositive[2]: expected teacher: {}", teacher3);
+		Teacher actualTeacher = dataProviderCsv2.getTeacherById(teacher3.getTeacherId());
+		log.debug("testGetTeacherByIdPositive[3]: actual teacher: {}", actualTeacher);
+		assertEquals(teacher3, actualTeacher);
+	}
+
+	@Test
+	public void testGetTeacherByIdNegative() {
+		log.debug("testGetTeacherByIdNegative[1]: test start");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.getTeacherById("12345");
+		});
+		assertEquals("there is no teacher with this id", exception.getMessage());
 	}
 
 	@Test
@@ -234,8 +257,10 @@ public class DataProviderCsvTest {
 	public void testGetGroupByIdNegative() {
 		log.debug("testGetGroupByIdNegative[1]: test start");
 
-		Group actualGroup = dataProviderCsv2.getGroupById("nonExistingGroupId");
-		assertNull(actualGroup);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.getGroupById("12345");
+		});
+		assertEquals("there is no group with this id", exception.getMessage());
 	}
 
 	// Тесты для getSubjectById
@@ -253,8 +278,10 @@ public class DataProviderCsvTest {
 	public void testGetSubjectByIdNegative() {
 		log.debug("testGetSubjectByIdNegative[1]: test start");
 
-		Subject actualSubject = dataProviderCsv2.getSubjectById("nonExistingSubjectId");
-		assertNull(actualSubject);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.getSubjectById("12345");
+		});
+		assertEquals("there is no subject with this id", exception.getMessage());
 	}
 
 	@Test
@@ -271,8 +298,10 @@ public class DataProviderCsvTest {
 	public void testGetScheduleUnitByIdNegative() {
 		log.debug("testGetScheduleUnitByIdNegative[1]: test start");
 
-		ScheduleUnit actualScheduleUnit = dataProviderCsv2.getScheduleUnitById("nonExistingScheduleUnitId", TypeOfSchedule.MAIN);
-		assertNull(actualScheduleUnit);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.getScheduleUnitById("12345", TypeOfSchedule.MAIN);
+		});
+		assertEquals("there is no scheduleUnit with this id", exception.getMessage());
 	}
 
 //	@Test
@@ -287,76 +316,119 @@ public class DataProviderCsvTest {
 //	}
 
 	@Test
-	public void testDeleteStudentPositive() {
-		log.debug("testDeleteStudents[1]: test start");
+	public void testDeleteStudentByIdPositive() throws Exception {
+		log.debug("testDeleteStudentById[1]: test start");
 		List<Student> expectedStudentsAfterDelete = new ArrayList<>();
 		expectedStudentsAfterDelete.add(student2);
 		expectedStudentsAfterDelete.add(student3);
 		List<Student> studentsBeforeDelete = dataProviderCsv2.getAllStudents();
-		log.debug("testDeleteStudents[2]: students before removing: {}", studentsBeforeDelete);
-		dataProviderCsv2.deleteStudent(student1);
+		log.debug("testDeleteStudentById[2]: students before removing: {}", studentsBeforeDelete);
+		dataProviderCsv2.deleteStudentById(student1.getStudentId());
 		List<Student> studentsAfterDelete = dataProviderCsv2.getAllStudents();
-		log.debug("testDeleteStudents[3]: students after removing: {}", studentsAfterDelete);
+		log.debug("testDeleteStudentById[3]: students after removing: {}", studentsAfterDelete);
 		assertEquals(expectedStudentsAfterDelete, studentsAfterDelete);
 	}
 
 	@Test
-	public void testDeleteTeacherPositive() {
-		log.debug("testDeleteTeacherPositive[1]: test start");
+	public void testDeleteStudentByIdNegative() {
+		log.debug("testDeleteStudentByIdNegative[1]: test start");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.deleteStudentById("qwertyuio");
+		});
+		assertEquals("there is no student with this id", exception.getMessage());
+	}
+
+	@Test
+	public void testDeleteTeacherByIdPositive() throws Exception {
+		log.debug("testDeleteTeacherById[1]: test start");
 		List<Teacher> expectedTeachersAfterDelete = new ArrayList<>();
 		expectedTeachersAfterDelete.add(teacher2);
 		expectedTeachersAfterDelete.add(teacher3);
 		List<Teacher> teachersBeforeDelete = dataProviderCsv2.getAllTeachers();
-		log.debug("testDeleteTeacherPositive[2]: teachers before removing: {}", teachersBeforeDelete);
-		dataProviderCsv2.deleteTeacher(teacher);
+		log.debug("testDeleteTeacherById[2]: teachers before removing: {}", teachersBeforeDelete);
+		dataProviderCsv2.deleteTeacherById(teacher.getTeacherId());
 		List<Teacher> teachersAfterDelete = dataProviderCsv2.getAllTeachers();
-		log.debug("testDeleteTeacherPositive[3]: teachers after removing: {}", teachersAfterDelete);
+		log.debug("testDeleteTeacherById[3]: teachers after removing: {}", teachersAfterDelete);
 		assertEquals(expectedTeachersAfterDelete, teachersAfterDelete);
 	}
 
 	@Test
-	public void testDeleteSubjectPositive() {
-		log.debug("testDeleteSubjectPositive[1]: test start");
-		List<Subject> expectedSubjectsAfterDelete = new ArrayList<>();
-		expectedSubjectsAfterDelete.add(subject2);
-		expectedSubjectsAfterDelete.add(subject3);
-		List<Subject> subjectsBeforeDelete = dataProviderCsv2.getAllSubjects();
-		log.debug("testDeleteSubjectPositive[2]: subjects before removing: {}", subjectsBeforeDelete);
-		dataProviderCsv2.deleteSubject(subject);
-		List<Subject> subjectsAfterDelete = dataProviderCsv2.getAllSubjects();
-		log.debug("testDeleteSubjectPositive[3]: subjects after removing: {}", subjectsAfterDelete);
-		assertEquals(expectedSubjectsAfterDelete, subjectsAfterDelete);
+	public void testDeleteTeacherByIdNegative() {
+		log.debug("testDeleteTeacherByIdNegative[1]: test start");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.deleteTeacherById("qwertyuio");
+		});
+		assertEquals("there is no teacher with this id", exception.getMessage());
 	}
 
 	@Test
-	public void testDeleteGroupPositive() {
-		log.debug("testDeleteGroupPositive[1]: test start");
+	public void testDeleteGroupByGroupNumberPositive() throws Exception {
+		log.debug("testDeleteGroupByGroupNumber[1]: test start");
 		List<Group> expectedGroupsAfterDelete = new ArrayList<>();
 		expectedGroupsAfterDelete.add(group3);
 		expectedGroupsAfterDelete.add(group2);
 		List<Group> groupsBeforeDelete = dataProviderCsv2.getAllGroups();
-		log.debug("testDeleteGroupPositive[2]: groups before removing: {}", groupsBeforeDelete);
-		dataProviderCsv2.deleteGroup(group);
+		log.debug("testDeleteGroupByGroupNumber[2]: groups before removing: {}", groupsBeforeDelete);
+		dataProviderCsv2.deleteGroupById(group.getGroupNumber());
 		List<Group> groupsAfterDelete = dataProviderCsv2.getAllGroups();
-		log.debug("testDeleteGroupPositive[3]: groups after removing: {}", groupsAfterDelete);
+		log.debug("testDeleteGroupByGroupNumber[3]: groups after removing: {}", groupsAfterDelete);
 		assertEquals(expectedGroupsAfterDelete, groupsAfterDelete);
 	}
 
 	@Test
-	public void testDeleteScheduleUnitPositive() {
-		log.debug("testDeleteScheduleUnitPositive[1]: test start");
+	public void testDeleteGroupByGroupNumberNegative() {
+		log.debug("testDeleteGroupByGroupNumberNegative[1]: test start");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.deleteGroupById("qwertyuio");
+		});
+		assertEquals("there is no group with this groupNumber", exception.getMessage());
+	}
+
+	@Test
+	public void testDeleteSubjectByIdPositive() throws Exception {
+		log.debug("testDeleteSubjectById[1]: test start");
+		List<Subject> expectedSubjectsAfterDelete = new ArrayList<>();
+		expectedSubjectsAfterDelete.add(subject2);
+		expectedSubjectsAfterDelete.add(subject3);
+		List<Subject> subjectsBeforeDelete = dataProviderCsv2.getAllSubjects();
+		log.debug("testDeleteSubjectById[2]: subjects before removing: {}", subjectsBeforeDelete);
+		dataProviderCsv2.deleteSubjectById(subject.getSubjectId());
+		List<Subject> subjectsAfterDelete = dataProviderCsv2.getAllSubjects();
+		log.debug("testDeleteSubjectById[3]: subjects after removing: {}", subjectsAfterDelete);
+		assertEquals(expectedSubjectsAfterDelete, subjectsAfterDelete);
+	}
+
+	@Test
+	public void testDeleteSubjectByIdNegative() {
+		log.debug("testDeleteSubjectByIdNegative[1]: test start");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.deleteSubjectById("qwertyuio");
+		});
+		assertEquals("there is no subject with this id", exception.getMessage());
+	}
+
+	@Test
+	public void testDeleteScheduleUnitByIdPositive() throws Exception {
+		log.debug("testDeleteScheduleUnitById[1]: test start");
 		List<ScheduleUnit> expectedScheduleUnitsAfterDelete = new ArrayList<>();
 		expectedScheduleUnitsAfterDelete.add(scheduleUnit2);
 		expectedScheduleUnitsAfterDelete.add(scheduleUnit3);
 		List<ScheduleUnit> scheduleUnitsBeforeDelete = dataProviderCsv2.getAllScheduleUnits(TypeOfSchedule.MAIN);
-		log.debug("testDeleteScheduleUnitPositive[2]: schedule units before removing: {}", scheduleUnitsBeforeDelete);
-		dataProviderCsv2.deleteScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
+		log.debug("testDeleteScheduleUnitById[2]: schedule units before removing: {}", scheduleUnitsBeforeDelete);
+		dataProviderCsv2.deleteScheduleUnitById(scheduleUnit.getScheduleUnitId(), TypeOfSchedule.MAIN);
 		List<ScheduleUnit> scheduleUnitsAfterDelete = dataProviderCsv2.getAllScheduleUnits(TypeOfSchedule.MAIN);
-		log.debug("testDeleteScheduleUnitPositive[3]: schedule units after removing: {}", scheduleUnitsAfterDelete);
+		log.debug("testDeleteScheduleUnitById[3]: schedule units after removing: {}", scheduleUnitsAfterDelete);
 		assertEquals(expectedScheduleUnitsAfterDelete, scheduleUnitsAfterDelete);
 	}
 
-
+	@Test
+	public void testDeleteScheduleUnitByIdNegative() {
+		log.debug("testDeleteScheduleUnitByIdNegative[1]: test start");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.deleteScheduleUnitById("qwertyuio", TypeOfSchedule.MAIN);
+		});
+		assertEquals("there is no schedule unit with this id", exception.getMessage());
+	}
 
 	@Test
 	public void testDeleteObject() {
@@ -404,12 +476,25 @@ public class DataProviderCsvTest {
 //	}
 
 	@Test
-	public void testDataTransform() {
+	public void testDataTransform() throws Exception {
 		log.debug("testDataTransform[1]: start test");
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
 		File file = files.get(0);
 		dataProviderCsv2.dataTransform(file.getPath());
 	}
+
+//	@Test
+//	public void testGetObjectFields() {
+//		log.debug("testGetObjectFields[1]: start test");
+//		String[] fields1 = dataProviderCsv2.getObjectFields(subject);
+//		String[] fields2 = dataProviderCsv2.getObjectFields(student1);
+//		for (String field: fields1) {
+//			log.debug("testGetObjectFields[2]: fieldsSubject: {}", field);
+//		}
+//		for (String field: fields2) {
+//			log.debug("testGetObjectFields[3]: fieldsStudent: {}", field);
+//		}
+//	}
 
 //	@Test
 //	public void testGetAllGroups() {
@@ -419,7 +504,7 @@ public class DataProviderCsvTest {
 //	}
 
 	@Test
-	public void testGetAllTeachers() {
+	public void testGetAllTeachers() throws Exception {
 		log.debug("testGetAllTeachers[1]: start test");
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
 		File file = files.get(0);
@@ -439,72 +524,12 @@ public class DataProviderCsvTest {
 	}
 
 	@Test
-	public void createTestSchedule() {
-		List<ScheduleUnit> schedule = new ArrayList<>();
-		Random random = new Random();
-
-		LocalDateTime currentDate = LocalDateTime.of(2023, 11, 27, 8, 0);
-		LocalDateTime endDate = LocalDateTime.of(2023, 12, 1, 17, 25);
-
-		int[] pairsPerDay = {3, 2, 4, 3, 5}; // Количество пар в каждый день недели
-
-		int timeBetweenClasses = 15; // Время между занятиями в минутах
-
-		for (int currentDay = 0; currentDate.isBefore(endDate); ) {
-			// Пропускаем создание занятий в субботу и воскресенье
-			if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
-				// Проверяем, не превышено ли количество пар в текущий день
-				if (currentDay < pairsPerDay.length && pairsPerDay[currentDay] > 0) {
-					// Создаем занятие
-					ScheduleUnit scheduleUnit = new ScheduleUnit();
-					scheduleUnit.setScheduleUnitId("ID" + schedule.size());
-
-					// Определяем номер пары на основе текущего значения
-					scheduleUnit.setDateTime(currentDate);
-
-					// Рандомно создаем предмет
-					Subject testSubject = new Subject("Test Subject", "Test Type");
-					scheduleUnit.setSubjectId(testSubject.getSubjectId());
-
-					scheduleUnit.setLocation("Classroom 101");
-
-					// Рандомно создаем тестового преподавателя
-					LocalDate currentLocalDate = LocalDate.now();
-					Random randomizer = new Random();
-					int randomDays = random.nextInt(7);
-					LocalDate randomDate = currentLocalDate.plusDays(randomDays);
-					Teacher teacher = new Teacher("Doe", "John", "Johnovich", "john@mail.ru", randomDate);
-					scheduleUnit.setPersonId(teacher.getTeacherId());
-
-					List<Group> testGroups = dataProviderCsv2.getAllGroups();
-					Group testGroup = testGroups.stream()
-									.skip(new Random().nextInt(testGroups.size()))
-									.findFirst()
-									.get();
-					scheduleUnit.setGroupNumber(testGroup.getGroupNumber());
-
-					schedule.add(scheduleUnit);
-
-					// Уменьшаем количество пар в текущий день
-					pairsPerDay[currentDay]--;
-
-					// Переходим к следующему времени (95 минут + временное окно)
-					currentDate = currentDate.plusMinutes(95 + timeBetweenClasses);
-				} else {
-					// Если все пары в текущий день уже созданы, переходим к следующему дню
-					currentDay++;
-					currentDate = LocalDateTime.of(currentDate.toLocalDate().plusDays(1), LocalTime.of(8, 0));
-				}
-			} else {
-				// Переход на следующий день и установка времени начала на 8:00
-				currentDay = 0; // Сброс индекса текущего дня
-				currentDate = LocalDateTime.of(currentDate.toLocalDate().plusDays(1), LocalTime.of(8, 0));
-			}
-		}
-
-		Schedule schedule1 = new Schedule(TypeOfSchedule.MAIN, schedule);
-		log.debug("schedule: {}", schedule1);
-		dataProviderCsv2.saveRecords(schedule, mainScheduleUnitsFile, ScheduleUnit.class, dataProviderCsv2.getObjectFields(new ScheduleUnit()));
+	public void testCreateMainSchedule() {
+		log.debug("createTestSchedule[1]: start test");
+		Schedule mainSchedule = createTestSchedule(dataProviderCsv2);
+		log.debug("createTestSchedule[2]: test main schedule: {}", mainSchedule);
+		saveRecords(mainSchedule.getUnits(), mainScheduleUnitsFile, ScheduleUnit.class, getObjectFields(new ScheduleUnit()));
+		assertNotNull(mainSchedule.getUnits());
 	}
 
 	@Test
@@ -515,7 +540,7 @@ public class DataProviderCsvTest {
 		LocalDate endDate = LocalDate.of(2023, 12, 15);
 
 		Schedule result = dataProviderCsv2.createSchedule(schedule, startDate, endDate, false, false);
-		dataProviderCsv2.saveRecords(result.getUnits(), retakeScheduleUnitsFile, ScheduleUnit.class, dataProviderCsv2.getObjectFields(new ScheduleUnit()));
+		saveRecords(result.getUnits(), retakeScheduleUnitsFile, ScheduleUnit.class, getObjectFields(new ScheduleUnit()));
 		log.debug("testCreateSchedule[2]: created schedule: {}", result);
 	}
 

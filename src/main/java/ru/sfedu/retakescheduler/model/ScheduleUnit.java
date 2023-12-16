@@ -2,25 +2,40 @@ package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvDate;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.retakescheduler.utils.LocalDateTimeAdapter;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ScheduleUnit {
+	@XmlElement(name = "scheduleUnitId")
 	@CsvBindByPosition(position = 0)
 	private String scheduleUnitId;
+	@XmlElement(name = "dateTime")
+	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	@CsvBindByPosition(position = 1)
 	@CsvDate(value = "yyyy-MM-dd'T'HH:mm")
 	private LocalDateTime dateTime;
+	@XmlElement(name = "subjectId")
 	@CsvBindByPosition(position = 2)
 //	private Subject subject;
 	private String subjectId;
+	@XmlElement(name = "location")
 	@CsvBindByPosition(position = 3)
 	private String location;
+	@XmlElement(name = "personId")
 	@CsvBindByPosition(position = 4)
 //	private Person person;
 	private String personId;
+	@XmlElement(name = "groupNumber")
 	@CsvBindByPosition(position = 5)
 //	private Group group;
 	private String groupNumber;

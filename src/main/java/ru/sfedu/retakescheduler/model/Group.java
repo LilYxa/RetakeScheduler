@@ -1,6 +1,9 @@
 package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
+import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import ru.sfedu.retakescheduler.utils.LocalDateAdapter;
 
 import java.time.LocalDate;
 import java.util.Date;
@@ -8,18 +11,27 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class Group {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Group implements EntityInterface {
 
+	@XmlElement(name = "groupNumber")
 	@CsvBindByPosition(position = 0)
 	private String groupNumber;
+	@XmlElement(name = "course")
 	@CsvBindByPosition(position = 1)
 	private int course;
+	@XmlElement(name = "levelOfTraining")
 	@CsvBindByPosition(position = 2)
 	private String levelOfTraining;
+	@XmlElement(name = "busyDay")
+	@XmlJavaTypeAdapter(LocalDateAdapter.class)
 	@CsvBindByPosition(position = 3)
 	private LocalDate busyDay;
 //	@CsvBindByPosition(position = 4)
 //	@CsvBindAndSplitByPosition(position = 4, required = true, elementType = Student.class, splitOn = ",")
+	@XmlElementWrapper(name = "students")
+	@XmlElement(name = "student")
 	private List<Student> students;
 
 	public Group() {
@@ -71,6 +83,11 @@ public class Group {
 
 	public void setStudents(List<Student> students) {
 		this.students = students;
+	}
+
+	@Override
+	public TypeOfEntity getType() {
+		return TypeOfEntity.GROUP;
 	}
 
 	@Override

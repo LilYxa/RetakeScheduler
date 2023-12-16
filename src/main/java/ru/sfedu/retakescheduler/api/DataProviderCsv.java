@@ -7,34 +7,35 @@ import com.opencsv.bean.*;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
-import ru.sfedu.retakescheduler.utils.ExcelUtil;
 import ru.sfedu.retakescheduler.utils.FileUtil;
 
+import static ru.sfedu.retakescheduler.utils.DataUtil.*;
+import static ru.sfedu.retakescheduler.utils.CsvUtil.*;
 import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.*;
-
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DataProviderCsv implements IDataProvider {
 
@@ -81,87 +82,14 @@ public class DataProviderCsv implements IDataProvider {
 		createFileIfNotExists(retakeScheduleUnitsFile);
 	}
 
-	public <T> List<T> getAllRecords(String pathToFile, Class<T> tClass) {
-		log.debug("getAllRecords[1]: start");
-		try (Reader reader = new FileReader(pathToFile);
-		     CSVReader csvReader = new CSVReaderBuilder(reader).build()) {
-			CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(csvReader)
-					.withType(tClass)
-					.build();
-			return csvToBean.parse();
-		} catch (IOException e) {
-			log.error("getAllRecords[3]: error: {}", e.getMessage());
-		}
-		return null;
-	}
-
-	public <T> void save(T object, String pathToFile, Class<T> tClass, String[] columns) {
-		log.debug("save[1]: save {}: {}", object.getClass().getSimpleName(), object);
-		try (CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, true))) {
-			ColumnPositionMappingStrategy<T> mappingStrategy = new ColumnPositionMappingStrategy<>();
-			mappingStrategy.setType(tClass);
-			mappingStrategy.setColumnMapping(columns);
-
-			StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(writer)
-					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-					.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
-					.withEscapechar(CSVWriter.DEFAULT_ESCAPE_CHARACTER)
-					.withMappingStrategy(mappingStrategy)
-					.build();
-			beanToCsv.write(object);
-		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-			log.error("save[2]: error: {}", e.getMessage());
-		}
-	}
-
-	public <T> void saveRecords(List<T> list, String pathToFile, Class<T> tClass, String[] columns) {
-		log.debug("saveRecords[1]: save records: {}", list);
-		try (CSVWriter writer = new CSVWriter(new FileWriter(pathToFile, false))) {
-			ColumnPositionMappingStrategy<T> mappingStrategy = new ColumnPositionMappingStrategy<>();
-			mappingStrategy.setType(tClass);
-			mappingStrategy.setColumnMapping(columns);
-
-			StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(writer)
-					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-					.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
-					.withEscapechar(CSVWriter.DEFAULT_ESCAPE_CHARACTER)
-					.withMappingStrategy(mappingStrategy)
-					.build();
-			beanToCsv.write(list);
-		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-			log.error("saveRecords[2]: error: {}", e.getMessage());
-		}
-	}
-
-	public <T> String[] getObjectFields(T object) {
-		List<Field> childClassFields = Arrays.stream(object.getClass().getDeclaredFields()).toList();
-		List<Field> parentClassFields = Arrays.stream(object.getClass().getSuperclass().getDeclaredFields()).toList();
-
-		List<Field> allFields = new ArrayList<>();
-		allFields.addAll(parentClassFields);
-		allFields.addAll(childClassFields);
-
-		String[] columns = new String[allFields.size()];
-		for (int i = 0; i < columns.length; i++) {
-			columns[i] = allFields.get(i).getName();
-		}
-		return columns;
-	}
-
 	@Override
 	public void saveStudent(Student student) throws Exception{
 		log.debug("saveStudent[1]: save Student: {}", student);
 
 		List<Student> students = getAllRecords(studentsFile, Student.class);
-		boolean notExist = students.stream().noneMatch(obj -> ((Student) obj).getStudentId().equals(student.getStudentId()));
-
-		if (notExist) {
-			students.add(student);
-			save(student, studentsFile, Student.class, getObjectFields(student));
-		} else {
-			log.error("saveStudent[2]: this student already exists");
-			throw new Exception("this student already exists");
-		}
+		checkIfEntityExist(students, student, "this student already exists");
+		students.add(student);
+		save(student, studentsFile, Student.class, getObjectFields(student));
 	}
 
 	@Override
@@ -169,15 +97,9 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("saveTeacher[1]: save Teacher: {}", teacher);
 
 		List<Teacher> teachers = getAllRecords(teachersFile, Teacher.class);
-		boolean notExist = teachers.stream().noneMatch(obj -> ((Teacher) obj).getTeacherId().equals(teacher.getTeacherId()));
-
-		if (notExist) {
-			teachers.add(teacher);
-			save(teacher, teachersFile, Teacher.class, getObjectFields(teacher));
-		} else {
-			log.error("saveTeacher[2]: this teacher already exists");
-			throw new Exception("this teacher already exists");
-		}
+		checkIfEntityExist(teachers, teacher, "this teacher already exists");
+		teachers.add(teacher);
+		save(teacher, teachersFile, Teacher.class, getObjectFields(teacher));
 	}
 
 	@Override
@@ -185,26 +107,18 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("saveGroup[1]: save Group: {}", group);
 		try (CSVWriter csvWriter = new CSVWriter(new FileWriter(groupsFile, true))) {
 
-//			List<Group> groups = getAllRecords(groupsFile, Group.class);
 			List<Group> groups = getAllGroups();
-			boolean notExist = groups.stream().noneMatch(obj -> ((Group) obj).getGroupNumber().equals(group.getGroupNumber()));
-
-			if (notExist) {
-				groups.add(group);
-
-				group.getStudents().stream()
-						.map(student -> new String[]{
-								group.getGroupNumber(),
-								String.valueOf(group.getCourse()),
-								group.getLevelOfTraining(),
-								group.getBusyDay() == null ? "" : group.getBusyDay().toString(),
-								student.getStudentId()
-						})
-						.forEach(csvWriter::writeNext);
-			} else {
-				log.error("saveGroup[2]: this group already exists");
-				throw new Exception("this group already exists");
-			}
+			checkIfEntityExist(groups, group, "this group already exists");
+			groups.add(group);
+			group.getStudents().stream()
+					.map(student -> new String[]{
+							group.getGroupNumber(),
+							String.valueOf(group.getCourse()),
+							group.getLevelOfTraining(),
+							group.getBusyDay() == null ? "" : group.getBusyDay().toString(),
+							student.getStudentId()
+					})
+					.forEach(csvWriter::writeNext);
 		} catch (IOException e) {
 			log.error("saveGroup[3]: error: {}", e.getMessage());
 		}
@@ -229,7 +143,13 @@ public class DataProviderCsv implements IDataProvider {
 						group.setBusyDay(date);
 
 						List<Student> students = entry.getValue().stream()
-								.map(arr -> getStudentById(arr[4]))
+								.map(arr -> {
+									try {
+										return getStudentById(arr[4]);
+									} catch (Exception e) {
+										throw new RuntimeException(e);
+									}
+								})
 								.collect(Collectors.toList());
 						group.setStudents(students);
 
@@ -249,15 +169,9 @@ public class DataProviderCsv implements IDataProvider {
 		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
 
 		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
-		boolean notExist = scheduleUnits.stream().noneMatch(obj -> ((ScheduleUnit) obj).getScheduleUnitId().equals(scheduleUnit.getScheduleUnitId()));
-
-		if (notExist) {
-			scheduleUnits.add(scheduleUnit);
-			save(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class, getObjectFields(scheduleUnit));
-		} else {
-			log.error("saveScheduleUnit[2]: this scheduleUnit already exists");
-			throw new Exception("this scheduleUnit already exists");
-		}
+		checkIfEntityExist(scheduleUnits, scheduleUnit, "this scheduleUnit already exists");
+		scheduleUnits.add(scheduleUnit);
+		save(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class, getObjectFields(scheduleUnit));
 	}
 
 	@Override
@@ -265,36 +179,9 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("saveSubject[1]: save Subject: {}", subject);
 
 		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
-		boolean notExist = subjects.stream().noneMatch(obj -> ((Subject) obj).getSubjectId().equals(subject.getSubjectId()));
-
-		if (notExist) {
-			subjects.add(subject);
-			save(subject, subjectsFile, Subject.class, getObjectFields(subject));
-		} else {
-			log.error("saveSubject[2]: this subject already exists");
-			throw new Exception("this subject already exists");
-		}
-	}
-
-	@Override
-	public void deleteStudent(Student student) {
-		log.debug("deleteStudent[1]: delete student: {}", student);
-
-		loggingObject.logObject(student, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
-
-		List<Student> students = getAllRecords(studentsFile, Student.class);
-
-		boolean result = students.remove(student);
-		log.debug("deleteStudent[2]: student was deleted: {}", result);
-
-		File oldFile = new File(studentsFile);
-		File newFile = new File(studentsFile);
-
-		boolean isFileDeleted = oldFile.delete();
-		log.debug("deleteStudent[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
-
-		saveRecords(students, newFile.getPath(), Student.class, getObjectFields(student));
-		log.debug("deleteStudent[4]: new file {} was created", newFile.getName());
+		checkIfEntityExist(subjects, subject, "this subject already exist");
+		subjects.add(subject);
+		save(subject, subjectsFile, Subject.class, getObjectFields(subject));
 	}
 
 	public void deleteStudentById(String studentId) throws Exception {
@@ -307,8 +194,7 @@ public class DataProviderCsv implements IDataProvider {
 					.findFirst()
 					.get();
 		} catch (NoSuchElementException e) {
-//			log.error("deleteStudentById[2]: there is no student with this id");
-//			return;
+			log.error("deleteStudentById[2]: there is no student with this id");
 			throw new Exception("there is no student with this id");
 		}
 		log.debug("deleteStudentById[3]: searched student: {}", searchedStudent);
@@ -325,6 +211,126 @@ public class DataProviderCsv implements IDataProvider {
 
 		saveRecords(students, newFile.getPath(), Student.class, getObjectFields(searchedStudent));
 		log.debug("deleteStudentById[6]: new file {} was created", newFile.getName());
+	}
+
+	public void deleteTeacherById(String teacherId) throws Exception {
+		log.debug("deleteTeacherById[1]: teacherId = {}", teacherId);
+		List<Teacher> teachers = getAllTeachers();
+		Teacher searchedTeacher = new Teacher();
+		try {
+			searchedTeacher = teachers.stream()
+					.filter(teacher -> teacher.getTeacherId().equals(teacherId))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("deleteTeacherById[2]: there is no teacher with this id");
+			throw new Exception("there is no teacher with this id");
+		}
+		log.debug("deleteTeacherById[3]: searched teacher: {}", searchedTeacher);
+		loggingObject.logObject(searchedTeacher, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		boolean removeResult = teachers.remove(searchedTeacher);
+		log.debug("deleteTeacherById[4]: deletion result: {}", removeResult);
+
+		File oldFile = new File(teachersFile);
+		File newFile = new File(teachersFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteTeacherById[5]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(teachers, newFile.getPath(), Teacher.class, getObjectFields(searchedTeacher));
+		log.debug("deleteTeacherById[6]: new file {} was created", newFile.getName());
+	}
+
+	@Override
+	public void deleteGroupById(String groupId) throws Exception {
+		log.debug("deleteGroupByGroupId[1]: groupNumber = {}", groupId);
+		List<Group> groups = getAllGroups();
+		Group searchedGroup;
+		try {
+			searchedGroup = groups.stream()
+					.filter(group -> group.getGroupNumber().equals(groupId))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("deleteGroupByGroupId[2]: there is no group with this groupNumber");
+			throw new Exception("there is no group with this groupNumber");
+		}
+		log.debug("deleteGroupByGroupId[3]: searched group: {}", searchedGroup);
+		loggingObject.logObject(searchedGroup, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		boolean removeResult = groups.remove(searchedGroup);
+		log.debug("deleteGroupByGroupNumber[4]: deletion result: {}", removeResult);
+
+		File oldFile = new File(groupsFile);
+		File newFile = new File(groupsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteGroupByGroupNumber[5]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveGroups(groups);
+		log.debug("deleteGroupByGroupNumber[6]: new file {} was created", newFile.getName());
+	}
+
+	@Override
+	public void deleteScheduleUnitById(String scheduleUnitId, TypeOfSchedule type) throws Exception {
+		log.debug("deleteScheduleUnitById[1]: scheduleUnitId = {}", scheduleUnitId);
+		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
+		List<ScheduleUnit> scheduleUnits = getAllScheduleUnits(type);
+		ScheduleUnit searchedScheduleUnit;
+		try {
+			searchedScheduleUnit = scheduleUnits.stream()
+					.filter(unit -> unit.getScheduleUnitId().equals(scheduleUnitId))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("deleteScheduleUnitById[2]: there is no schedule unit with this id");
+			throw new Exception("there is no schedule unit with this id");
+		}
+		log.debug("deleteScheduleUnitById[3]: searched schedule unit: {}", searchedScheduleUnit);
+		loggingObject.logObject(searchedScheduleUnit, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		boolean removeResult = scheduleUnits.remove(searchedScheduleUnit);
+		log.debug("deleteScheduleUnitById[4]: deletion result: {}", removeResult);
+
+		File oldFile = new File(scheduleUnitsFile);
+		File newFile = new File(scheduleUnitsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteScheduleUnitById[5]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(scheduleUnits, newFile.getPath(), ScheduleUnit.class, getObjectFields(searchedScheduleUnit));
+		log.debug("deleteScheduleUnitById[6]: new file {} was created", newFile.getName());
+	}
+
+	@Override
+	public void deleteSubjectById(String subjectId) throws Exception {
+		log.debug("deleteSubjectById[1]: subjectId = {}", subjectId);
+		List<Subject> subjects = getAllSubjects();
+		Subject searchedSubject;
+		try {
+			searchedSubject = subjects.stream()
+					.filter(subject -> subject.getSubjectId().equals(subjectId))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("deleteSubjectById[2]: there is no subject with this id");
+			throw new Exception("there is no subject with this id");
+		}
+		log.debug("deleteSubjectById[3]: searched subject: {}", searchedSubject);
+		loggingObject.logObject(searchedSubject, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
+
+		boolean removeResult = subjects.remove(searchedSubject);
+		log.debug("deleteSubjectById[4]: deletion result: {}", removeResult);
+
+		File oldFile = new File(subjectsFile);
+		File newFile = new File(subjectsFile);
+
+		boolean isFileDeleted = oldFile.delete();
+		log.debug("deleteSubjectById[5]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
+
+		saveRecords(subjects, newFile.getPath(), Subject.class, getObjectFields(searchedSubject));
+		log.debug("deleteSubjectById[6]: new file {} was created", newFile.getName());
 	}
 
 	public <T> void deleteObject(T object, String filePath) {
@@ -345,91 +351,6 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("deleteObject[4]: new file {} was created", newFile.getName());
 	}
 
-	@Override
-	public void deleteTeacher(Teacher teacher) {
-		log.debug("deleteTeacher[1]: delete teacher: {}", teacher);
-
-		loggingObject.logObject(teacher, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
-
-		List<Teacher> teachers = getAllRecords(teachersFile, Teacher.class);
-
-		boolean result = teachers.remove(teacher);
-		log.debug("deleteTeacher[2]: teacher was deleted: {}", result);
-
-		File oldFile = new File(teachersFile);
-		File newFile = new File(teachersFile);
-
-		boolean isFileDeleted = oldFile.delete();
-		log.debug("deleteTeacher[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
-
-		saveRecords(teachers, newFile.getPath(), Teacher.class, getObjectFields(teacher));
-		log.debug("deleteStudent[4]: new file {} was created", newFile.getName());
-	}
-
-	@Override
-	public void deleteGroup(Group group) {
-		log.debug("deleteGroup[1]: delete group: {}", group);
-
-		loggingObject.logObject(group, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
-
-		List<Group> groups = getAllGroups();
-
-		boolean result = groups.remove(group);
-		log.debug("deleteGroup[2]: group was deleted: {}", result);
-
-		File oldFile = new File(groupsFile);
-		File newFile = new File(groupsFile);
-
-		boolean isFileDeleted = oldFile.delete();
-		log.debug("deleteGroup[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
-
-		saveGroups(groups);
-		log.debug("deleteGroup[4]: new file {} was created", newFile.getName());
-	}
-
-	@Override
-	public void deleteScheduleUnit(ScheduleUnit scheduleUnit, TypeOfSchedule type) {
-		log.debug("deleteScheduleUnit[1]: delete scheduleUnit: {}", scheduleUnit);
-		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
-
-		loggingObject.logObject(scheduleUnit, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
-
-		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
-
-		boolean result = scheduleUnits.remove(scheduleUnit);
-		log.debug("deleteScheduleUnit[2]: scheduleUnit was deleted: {}", result);
-
-		File oldFile = new File(scheduleUnitsFile);
-		File newFile = new File(scheduleUnitsFile);
-
-		boolean isFileDeleted = oldFile.delete();
-		log.debug("deleteScheduleUnits[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
-
-		saveRecords(scheduleUnits, newFile.getPath(), ScheduleUnit.class, getObjectFields(scheduleUnit));
-		log.debug("deleteScheduleUnit[4]: new file {} was created", newFile.getName());
-	}
-
-	@Override
-	public void deleteSubject(Subject subject) {
-		log.debug("deleteSubject[1]: delete subject: {}", subject);
-
-		loggingObject.logObject(subject, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
-
-		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
-
-		boolean result = subjects.remove(subject);
-		log.debug("deleteSubject[2]: subject was deleted: {}", result);
-
-		File oldFile = new File(subjectsFile);
-		File newFile = new File(subjectsFile);
-
-		boolean isFileDeleted = oldFile.delete();
-		log.debug("deleteSubject[3]: old file {} was deleted: {}", oldFile.getName(), isFileDeleted);
-
-		saveRecords(subjects, newFile.getPath(), Subject.class, getObjectFields(subject));
-		log.debug("deleteSubject[4]: new file {} was created", newFile.getName());
-	}
-
 	private <T> T getObjectById(String id, Class<T> tClass, String filePath, Function<T, String> idExtractor) {
 		log.debug("getObjectById[1]: object {}, id = {}", tClass.getSimpleName(), id);
 		List<T> objects = getAllRecords(filePath, tClass);
@@ -446,7 +367,7 @@ public class DataProviderCsv implements IDataProvider {
 	}
 
 	@Override
-	public Student getStudentById(String id) {
+	public Student getStudentById(String id) throws Exception {
 		log.debug("getStudentById[1]: id = {}", id);
 		List<Student> students = getAllRecords(studentsFile, Student.class);
 		Student searchedStudent = null;
@@ -457,12 +378,13 @@ public class DataProviderCsv implements IDataProvider {
 					.get();
 		} catch (NoSuchElementException e) {
 			log.error("getStudentById[2]: error: {}", e.getMessage());
+			throw new Exception("there is no student with this id");
 		}
 		return searchedStudent;
 	}
 
 	@Override
-	public Teacher getTeacherById(String id) {
+	public Teacher getTeacherById(String id) throws Exception {
 		log.debug("getTeacherById[1]: id = {}", id);
 		List<Teacher> teachers = getAllRecords(teachersFile, Teacher.class);
 		Teacher searchedTeacher = null;
@@ -473,12 +395,13 @@ public class DataProviderCsv implements IDataProvider {
 					.get();
 		} catch (NoSuchElementException e) {
 			log.error("getTeacherById[2]: error: {}", e.getMessage());
+			throw new Exception("there is no teacher with this id");
 		}
 		return searchedTeacher;
 	}
 
 	@Override
-	public Group getGroupById(String id) {
+	public Group getGroupById(String id) throws Exception {
 		log.debug("getGroupById[1]: id = {}", id);
 		List<Group> groups = getAllGroups();
 		Group searchedGroup = null;
@@ -489,12 +412,13 @@ public class DataProviderCsv implements IDataProvider {
 					.get();
 		} catch (NoSuchElementException e) {
 			log.error("getGroupById[2]: error: {}", e.getMessage());
+			throw new Exception("there is no group with this id");
 		}
 		return searchedGroup;
 	}
 
 	@Override
-	public ScheduleUnit getScheduleUnitById(String id, TypeOfSchedule type) {
+	public ScheduleUnit getScheduleUnitById(String id, TypeOfSchedule type) throws Exception {
 		log.debug("getScheduleUnitById[1]: id = {}", id);
 		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
 		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
@@ -506,12 +430,13 @@ public class DataProviderCsv implements IDataProvider {
 					.get();
 		} catch (NoSuchElementException e) {
 			log.error("getScheduleUnitById[2]: error: {}", e.getMessage());
+			throw new Exception("there is no scheduleUnit with this id");
 		}
 		return searchedScheduleUnit;
 	}
 
 	@Override
-	public Subject getSubjectById(String id) {
+	public Subject getSubjectById(String id) throws Exception {
 		log.debug("getSubjectById[1]: id = {}", id);
 		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
 		Subject searchedSubject = null;
@@ -522,6 +447,7 @@ public class DataProviderCsv implements IDataProvider {
 					.get();
 		} catch (NoSuchElementException e) {
 			log.error("getSubjectById[2]: error: {}", e.getMessage());
+			throw new Exception("there is no subject with this id");
 		}
 		return searchedSubject;
 	}
@@ -568,7 +494,7 @@ public class DataProviderCsv implements IDataProvider {
 	}
 
 	@Override
-	public void dataTransform(String sourceFilePath) {
+	public void dataTransform(String sourceFilePath) throws Exception {
 		log.debug("dataTransform[1]: transform data from file: {}", sourceFilePath);
 		List<ExcelRow> excelRows = dataLoading(sourceFilePath);
 
@@ -586,13 +512,13 @@ public class DataProviderCsv implements IDataProvider {
 
 		List<HashMap<Object, HashMap<String, String>>> resultsOfValidation = objects.stream()
 				.flatMap(innerList -> innerList.stream())
-				.map(item -> validation(item))
+				.map(item -> validation((EntityInterface) item))
 				.filter(result -> !result.isEmpty())
 				.toList();
 
 		if (!resultsOfValidation.isEmpty()) {
 			log.error("dataTransform[2]: Errors were detected during data validation: {}", resultsOfValidation);
-			return;
+			throw new Exception("Errors were detected during data validation");
 		}
 
 		saveRecords(students, studentsFile, Student.class, getObjectFields(new Student()));
@@ -600,213 +526,6 @@ public class DataProviderCsv implements IDataProvider {
 		saveRecords(subjects, subjectsFile, Subject.class, getObjectFields(new Subject()));
 		saveRecords(teachers, teachersFile, Teacher.class, getObjectFields(new Teacher()));
 		log.debug("dataTransform[3]: records were saved in CSV files");
-	}
-
-	private List<ExcelRow> dataLoading(String filePath) {
-		List<ExcelRow> excelRows = new ArrayList<>();
-		log.debug("dataLoading[1]: data loading from file: {}", filePath);
-		try {
-			excelRows = ExcelUtil.readFromExcel(filePath);
-		} catch (IOException e) {
-			log.error("dataLoading[2]: error: {}", e.getMessage());
-		}
-		return excelRows;
-	}
-
-	private List<Student> convertToStudents(List<ExcelRow> excelRows) {
-		return new ArrayList<>(excelRows.stream()
-				.map(this::convertToStudent)
-				.collect(Collectors.toMap(
-						student -> Arrays.asList(student.getLastName(), student.getFirstName(), student.getPatronymic()),
-						Function.identity(),
-						(existing, replacement) -> existing
-				))
-				.values());
-	}
-
-	private List<Group> convertToGroups(List<ExcelRow> excelRows) {
-		return new ArrayList<>(excelRows.stream()
-				.map(this::convertToGroup)
-				.distinct()
-				.collect(Collectors.toList()));
-	}
-
-	private List<Subject> convertToSubjects(List<ExcelRow> excelRows) {
-		return new ArrayList<>(excelRows.stream()
-				.map(this::convertToSubject)
-				.collect(Collectors.toMap(
-						subject -> subject.getSubjectName(),
-						Function.identity(),
-						(existing, replacement) -> existing
-				))
-				.values());
-	}
-
-	private List<Teacher> convertToTeachers(List<ExcelRow> excelRows) {
-		return new ArrayList<>(excelRows.stream()
-				.map(this::convertToTeacher)
-				.filter(teacher -> !teacher.getLastName().equals(Constants.PHYSICAL_TRAINING_FIELD))
-				.collect(Collectors.toMap(
-						teacher -> Arrays.asList(teacher.getLastName(), teacher.getFirstName(), teacher.getPatronymic()),
-						Function.identity(),
-						(existing, replacement) -> existing
-				))
-				.values());
-	}
-
-	private Student convertToStudent(ExcelRow excelRow) {
-		Student student = new Student();
-		String[] studentName = excelRow.getStudentName().split(" ");
-		if (studentName.length >= 3) {
-			student.setLastName(studentName[0]);
-			// Если после фамилии в скобках указана еще одна фамилия
-			String firstName = studentName[1].startsWith("(") ? studentName[2] : studentName[1];
-			String patronymic = studentName[1].startsWith("(") ? studentName[3] : studentName[2];
-			student.setFirstName(firstName);
-			student.setPatronymic(patronymic);
-		} else if (studentName.length == 2) {
-			// Не хватает отчества
-			student.setLastName(studentName[0]);
-			student.setFirstName(studentName[1]);
-		} else if (studentName.length == 1) {
-			// Не хватает и имени и отчества
-			student.setLastName(studentName[0]);
-		}
-		double avgScore = (Math.random() * 55) + 25;
-		student.setAverageScore(Math.round(avgScore * 100.0) / 100.0);
-		return student;
-	}
-
-	private Group convertToGroup(ExcelRow excelRow) {
-		Group group = new Group();
-		group.setGroupNumber(excelRow.getGroup());
-		group.setCourse(excelRow.getCourse());
-		group.setLevelOfTraining(excelRow.getLevel());
-		LocalDate localDate = LocalDate.now();
-		localDate = localDate.with(DayOfWeek.TUESDAY);
-		group.setBusyDay(localDate);
-		return group;
-	}
-
-	private Subject convertToSubject(ExcelRow excelRow) {
-		Subject subject = new Subject();
-		subject.setSubjectName(excelRow.getDiscipline());
-		subject.setControlType(excelRow.getControlType());
-		return subject;
-	}
-
-	private Teacher convertToTeacher(ExcelRow excelRow) {
-		String[] fullName = excelRow.getTeacherName().split(" ");
-		Teacher teacher = new Teacher();
-		if (fullName.length == 3) {
-			teacher.setLastName(fullName[0]);
-			teacher.setFirstName(fullName[1]);
-			teacher.setPatronymic(fullName[2]);
-		}
-		else {
-			teacher.setLastName(fullName[0]);
-		}
-		LocalDate currentDate = LocalDate.now();
-		Random random = new Random();
-		int randomDays = random.nextInt(7);
-		LocalDate randomDate = currentDate.plusDays(randomDays);
-		teacher.setBusyDay(randomDate);
-		return teacher;
-	}
-
-	private List<Student> getStudentsInGroup(String groupNum, List<ExcelRow> excelRows, List<Student> students) {
-		return new ArrayList<>(excelRows.stream()
-				.filter(row -> row.getGroup().equals(groupNum))
-				.map(row -> findStudent(row, students))
-				.collect(Collectors.toMap(
-						student -> Arrays.asList(student.getLastName(), student.getFirstName(), student.getPatronymic()),
-						Function.identity(),
-						(existing, replacement) -> existing
-				))
-				.values());
-	}
-
-	private Student findStudent(ExcelRow excelRow, List<Student> students) {
-		String fullName = excelRow.getStudentName();
-
-		// Ищем студента в списке students по полному имени
-		return students.stream()
-				.filter(student -> fullName.equals(student.getLastName() + " " + student.getFirstName() + " " + student.getPatronymic()))
-				.findFirst()
-				.orElseGet(() -> convertToStudent(excelRow)); // Если студент не найден, создаем нового с помощью convertToStudent
-	}
-
-	private HashMap<Object, HashMap<String, String>> validation(Object object) {
-		log.debug("validation[1]: start validation, object: {}", object);
-		HashMap<Object, HashMap<String, String>> validationResult = new HashMap<>();
-		HashMap<String, String> errors = null;
-
-		if (object instanceof Person) {
-			errors = personValidation((Person) object);
-		} else if (object instanceof Group) {
-			errors = groupValidation((Group) object);
-		} else {
-			errors = subjectValidation((Subject) object);
-		}
-
-		if (!errors.isEmpty()) {
-			validationResult.put(object, errors);
-		}
-		return validationResult;
-	}
-
-	private HashMap<String, String> personValidation(Person person) {
-		log.debug("personValidation[1]: person: {}", person);
-		HashMap<String, String> errors = new HashMap<>();
-
-		if (!person.getLastName().matches(Constants.NAME_REGEX)) {
-			errors.put(Constants.LASTNAME_FIELD, Constants.INCORRECT_LASTNAME);
-		}
-
-		if (!person.getFirstName().matches(Constants.NAME_REGEX)) {
-			errors.put(Constants.FIRSTNAME_FIELD, Constants.INCORRECT_FIRSTNAME);
-		}
-
-		if (person.getPatronymic() != null && !person.getPatronymic().matches(Constants.PATRONYMIC_REGEX)) {
-			errors.put(Constants.PATRONYMIC_FIELD, Constants.INCORRECT_PATRONYMIC);
-		}
-		log.debug("personValidation[2]: validation errors: {}", errors);
-		return errors;
-	}
-
-	private HashMap<String, String> groupValidation(Group group) {
-		log.debug("groupValidation[1]: group: {}", group);
-		HashMap<String, String> errors = new HashMap<>();
-
-		if (!group.getGroupNumber().matches(Constants.GROUP_NUMBER_REGEX)) {
-			errors.put(Constants.GROUP_NUMBER_FIELD, Constants.INCORRECT_GROUP_NUMBER);
-		}
-
-		if (!group.getLevelOfTraining().matches(Constants.NAME_REGEX)) {
-			errors.put(Constants.TRAINING_LEVEL_FIELD, Constants.INCORRECT_TRAINING_LEVEL);
-		}
-
-		if (group.getStudents().isEmpty()) {
-			errors.put(Constants.GROUP_NUMBER_FIELD, Constants.EMPTY_GROUP);
-		}
-
-		log.debug("groupValidation[2]: validation errors: {}", errors);
-		return errors;
-	}
-
-	private HashMap<String, String> subjectValidation(Subject subject) {
-		log.debug("subjectValidation[1]: subject: {}", subject);
-		HashMap<String, String> errors = new HashMap<>();
-
-		if (!subject.getSubjectName().matches(Constants.SUBJECT_REGEX)) {
-			errors.put(Constants.SUBJECT_FIELD, Constants.INCORRECT_SUBJECT);
-		}
-
-		if (!subject.getControlType().matches(Constants.CONTROL_TYPE_REGEX)) {
-			errors.put(Constants.CONTROL_TYPE_FIELD, Constants.INCORRECT_CONTROL_TYPE);
-		}
-		log.debug("subjectValidation[2]: validation errors: {}", errors);
-		return errors;
 	}
 
 	public Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) {
@@ -827,10 +546,9 @@ public class DataProviderCsv implements IDataProvider {
 		fillTeacherSubjectMapping(excelRows, teacherSubjectMapping, teachers, subjects);
 
 		List<ScheduleUnit> retakes = new ArrayList<>();
-		List<ScheduleUnit> mainSubjects = mainSchedule.getUnits();
 
 		// Продолжительность урока (в минутах)
-		int lessonDuration = 95;
+		int lessonDuration = Constants.LESSON_DURATION;
 
 		for (LocalDateTime currentDate = startDateTime; currentDate.isBefore(endDateTime); currentDate = currentDate.plusDays(1)) {
 			if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
@@ -849,7 +567,7 @@ public class DataProviderCsv implements IDataProvider {
 						if (group != null && !group.getBusyDay().equals(currentDate) && !group.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
 
 							// Проверка наложения с основным расписанием
-							if (!isOverlapping(mainSubjects, currentDate, lessonDuration)) {
+							if (!isOverlapping(mainSchedule, currentDate, lessonDuration)) {
 								ScheduleUnit retakeUnit = new ScheduleUnit();
 								retakeUnit.setSubjectId(subject.getSubjectId());
 								retakeUnit.setPersonId(teacher.getTeacherId());
@@ -872,104 +590,61 @@ public class DataProviderCsv implements IDataProvider {
 		}
 
 		if (exportToExcel) {
-			exportInExcelFormat(retakeSchedule, Constants.EXCEL_FOLDER.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE));
+			try {
+				exportInExcelFormat(retakeSchedule, Constants.EXCEL_FOLDER.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE));
+			} catch (Exception e) {
+				log.error("createSchedule[2]: error: {}", e.getMessage());
+			}
 		}
 
 		return retakeSchedule;
 	}
 
 	// Метод проверки наложения с основным расписанием
-	private boolean isOverlapping(List<ScheduleUnit> mainSubjects, LocalDateTime startTime, int lessonDuration) {
+	private boolean isOverlapping(Schedule mainSchedule, LocalDateTime startTime, int lessonDuration) {
 		LocalDateTime endTime = startTime.plusMinutes(lessonDuration);
 
-		for (ScheduleUnit mainSubject : mainSubjects) {
-			LocalDateTime mainStartTime = mainSubject.getDateTime();
-			LocalDateTime mainEndTime = mainStartTime.plusMinutes(lessonDuration);
+		return mainSchedule.getUnits().stream()
+				.anyMatch(mainSubject -> {
+					LocalDateTime mainStartTime = mainSubject.getDateTime();
+					LocalDateTime mainEndTime = mainStartTime.plusMinutes(lessonDuration);
 
-			if (startTime.isBefore(mainEndTime) && endTime.isAfter(mainStartTime)) {
-				return true; // Наложение с основным расписанием
-			}
-		}
-
-		return false; // Нет наложения
+					return startTime.isBefore(mainEndTime) && endTime.isAfter(mainStartTime);
+				});
 	}
-
 
 	private static Group findGroupByDiscipline(List<ExcelRow> excelRows, List<Group> groups, Subject subject) {
-		for (ExcelRow excelRow : excelRows) {
-			if (excelRow.getDiscipline().equals(subject.getSubjectName())) {
-				String groupNumber = excelRow.getGroup();
-				for (Group group : groups) {
-					if (group.getGroupNumber().equals(groupNumber)) {
-						return group;
-					}
-				}
-			}
-		}
-		return null;  // Возвращаем null, если группа не найдена
+		return excelRows.stream()
+				.filter(excelRow -> excelRow.getDiscipline().equals(subject.getSubjectName()))
+				.map(ExcelRow::getGroup)
+				.flatMap(groupNumber -> groups.stream().filter(group -> group.getGroupNumber().equals(groupNumber)).findFirst().stream())
+				.findFirst()
+				.orElse(null);
 	}
-	private static void fillTeacherSubjectMapping(List<ExcelRow> excelRows, TeacherSubjectMapping teacherSubjectMapping, List<Teacher> teachers, List<Subject> subjects) {
-		for (ExcelRow excelRow : excelRows) {
-			String teacherName = excelRow.getTeacherName();
-			String[] teacherNameArr = teacherName.split(" ");
-			if (teacherNameArr.length == 1)
-				continue;
-			String discipline = excelRow.getDiscipline();
 
-			Optional<Teacher> optionalTeacher = teachers.stream()
-					.filter(teacher -> teacher.getLastName().equals(teacherNameArr[0])
-					&& teacher.getFirstName().equals(teacherNameArr[1])
-					&& teacher.getPatronymic().equals(teacherNameArr[2]))
+	private static void fillTeacherSubjectMapping(List<ExcelRow> excelRows, TeacherSubjectMapping teacherSubjectMapping, List<Teacher> teachers, List<Subject> subjects) {
+		excelRows.stream()
+				.filter(excelRow -> excelRow.getTeacherName().split(" ").length > 1) // Избавляюсь от ФИЗ-РЫ
+				.forEach(excelRow -> {
+					String[] teacherNameArr = excelRow.getTeacherName().split(" ");
+					String discipline = excelRow.getDiscipline();
+
+					Optional<Teacher> optionalTeacher = teachers.stream()
+							.filter(teacher -> teacher.getLastName().equals(teacherNameArr[0])
+									&& teacher.getFirstName().equals(teacherNameArr[1])
+									&& teacher.getPatronymic().equals(teacherNameArr[2]))
 							.findFirst();
 
-			Optional<Subject> optionalSubject = subjects.stream()
-					.filter(subject -> subject.getSubjectName().equals(discipline))
-					.findFirst();
+					Optional<Subject> optionalSubject = subjects.stream()
+							.filter(subject -> subject.getSubjectName().equals(discipline))
+							.findFirst();
 
-
-			if (optionalTeacher.isPresent() && optionalSubject.isPresent()) {
-				Teacher teacher = optionalTeacher.get();
-				Subject subject = optionalSubject.get();
-
-				// Добавляем в TeacherSubjectMapping
-				teacherSubjectMapping.addTeacherSubject(teacher, subject);
-			}
-		}
+					optionalTeacher.ifPresent(teacher ->
+							optionalSubject.ifPresent(subject ->
+									teacherSubjectMapping.addTeacherSubject(teacher, subject)));
+				});
 	}
 
-	private static Map<Subject, Set<Group>> fillGroupSubjectMapping(List<ExcelRow> excelRows, List<Group> groups, List<Subject> subjects) {
-		Map<Subject, Set<Group>> subjectGroupMap = new HashMap<>();
-
-		for (ExcelRow excelRow : excelRows) {
-			String[] teacherNameArr = excelRow.getTeacherName().split(" ");
-			if (teacherNameArr.length == 1)
-				continue;
-
-			String group = excelRow.getGroup();
-			String discipline = excelRow.getDiscipline();
-
-			Optional<Group> optionalGroup = groups.stream()
-					.filter(group1 -> group1.getGroupNumber().equals(group))
-					.findFirst();
-
-			Optional<Subject> optionalSubject = subjects.stream()
-					.filter(subject -> subject.getSubjectName().equals(discipline))
-					.findFirst();
-
-			if (optionalGroup.isPresent() && optionalSubject.isPresent()) {
-				Group group1 = optionalGroup.get();
-				Subject subject = optionalSubject.get();
-
-				// Получаем или создаем множество групп для данного предмета
-				Set<Group> groupSet = subjectGroupMap.computeIfAbsent(subject, k -> new HashSet<>());
-
-				// Добавляем текущую группу в множество
-				groupSet.add(group1);
-			}
-		}
-
-		return subjectGroupMap;
-	}
 
 	private void sendEmail(Schedule schedule, List<Student> students) {
 		log.debug("sendMail[1]: send mail to students: {}", students);
@@ -1021,7 +696,7 @@ public class DataProviderCsv implements IDataProvider {
 		}
 	}
 
-	private void exportInExcelFormat(Schedule schedule, String pathToFile) {
+	private void exportInExcelFormat(Schedule schedule, String pathToFile) throws Exception {
 		log.debug("exportInExcelFormat[1]: export schedule to file: {}", pathToFile);
 		List<ScheduleUnit> scheduleUnits = schedule.getUnits();
 		try (Workbook workbook = new XSSFWorkbook()) {

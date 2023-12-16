@@ -2,6 +2,7 @@ package ru.sfedu.retakescheduler.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -116,6 +117,7 @@ public class MongoBeanHistory {
 
 	public static Map<String, Object> objectToJsonArray(Object object) {
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 		Map<String, Object> jsonArray = new HashMap<>();
 		try {
 			jsonArray = mapper.convertValue(object, Map.class);

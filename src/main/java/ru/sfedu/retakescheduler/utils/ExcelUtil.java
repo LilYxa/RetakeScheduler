@@ -18,24 +18,7 @@ import java.util.List;
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 
 public class ExcelUtil {
-	private static final Logger log = LogManager.getLogger(DataProviderCsv.class);
-//	private String excelFile;
-//
-//	public ExcelUtil() {
-//		this(Constants.DEBTORS_EXCEL_FILE, Constants.EXCEL_FOLDER);
-//	}
-//
-//	public ExcelUtil(String fileName, String pathToExcelFile) {
-//		log.debug("ExcelFile[1]: ");
-//		String finalFolder = pathToExcelFile.equals(Constants.EXCEL_FOLDER) ? Constants.EXCEL_FOLDER : pathToExcelFile;
-//		excelFile = finalFolder.concat(Constants.DEBTORS_EXCEL_FILE).concat(Constants.EXCEL_FILE_TYPE);
-//
-//		try {
-//			createFolderIfNotExists(finalFolder);
-//		} catch (IOException e) {
-//
-//		}
-//	}
+	private static final Logger log = LogManager.getLogger(ExcelUtil.class);
 
 	public static List<ExcelRow> readFromExcel(String filePath) throws IOException {
 		log.debug("readFromExcel[1]: read from file: {}", filePath);

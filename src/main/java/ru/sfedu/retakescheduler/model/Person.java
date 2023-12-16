@@ -1,17 +1,27 @@
 package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.util.Objects;
 
-public class Person {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Person implements EntityInterface {
 
+	@XmlElement(name = "lastName")
 	@CsvBindByPosition(position = 0)
 	private String lastName;
+	@XmlElement(name = "firstName")
 	@CsvBindByPosition(position = 1)
 	private String firstName;
+	@XmlElement(name = "patronymic")
 	@CsvBindByPosition(position = 2)
 	private String patronymic;
+	@XmlElement(name = "email")
 	@CsvBindByPosition(position = 3)
 	private String email;
 
@@ -61,6 +71,11 @@ public class Person {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	@Override
+	public TypeOfEntity getType() {
+		return TypeOfEntity.PERSON;
 	}
 
 	@Override

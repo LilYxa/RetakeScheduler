@@ -26,6 +26,11 @@ public class Constants {
 	public static final String CSV_FILE_TYPE = ".csv";
 	public static final String TEST_FOLDER_PATH = "src/test/testFolder/";
 
+	public static final String XML_FOLDER_PATH = "src/main/resources/xml/";
+	public static final String XML_FOLDER = "xml/";
+	public static final String XML_FILE_TYPE = ".xml";
+
+
 	public static final String PERSON_FILE = "people";
 	public static final String STUDENT_FILE = "students";
 	public static final String TEACHER_FILE = "teachers";
@@ -45,6 +50,7 @@ public class Constants {
 	public static final String GROUP_NUMBER_REGEX = "^[a-zA-Zа-яА-ЯёЁ0-9\\-\\.]{5,30}$";
 	public static final String SUBJECT_REGEX = "^[а-яА-Яa-zA-Z0-9\\s.,!@#$%^&*()_+=:-]{2,200}$";
 	public static final String CONTROL_TYPE_REGEX = "^[a-zA-Zа-яА-ЯёЁ\\s]{2,25}$";
+	public static final String DOUBLE_LASTNAME_REGEX = "\\s*\\([^\\)]*\\)\\s*";
 
 	public static final String LASTNAME_FIELD = "lastName";
 	public static final String FIRSTNAME_FIELD = "firstName";
@@ -64,6 +70,7 @@ public class Constants {
 	public static final String INCORRECT_CONTROL_TYPE = "Тип контроля может состоять из букв латинского и русского алфавита длиною от 2 до 25 символов";
 
 	public static final String PHYSICAL_TRAINING_FIELD = "ФИЗ-РА";
+	public static final int LESSON_DURATION = 95;
 
 	public static final String SMTP_EMAIL = "EMAIL_FOR_SMTP";
 	public static final String SMTP_PASSWORD = "PASSWORD_FOR_SMTP";

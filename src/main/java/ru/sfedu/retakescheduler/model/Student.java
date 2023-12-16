@@ -1,13 +1,21 @@
 package ru.sfedu.retakescheduler.model;
 
 import com.opencsv.bean.CsvBindByPosition;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Student extends Person{
+	@XmlElement(name = "studentId")
 	@CsvBindByPosition(position = 4)
 	private String studentId;
+	@XmlElement(name = "averageScore")
 	@CsvBindByPosition(position = 5)
 	private double averageScore;
 
