@@ -561,11 +561,11 @@ public class DataProviderCsvTest extends BaseTest {
 //	}
 //
 //	@Test
-//	public void testExportInExcel() {
+//	public void testExportInExcel() throws Exception {
 //		log.debug("testExportInExcelFormat[1]: start test");
 //		List<ScheduleUnit> retakes = dataProviderCsv2.getAllScheduleUnits(TypeOfSchedule.RETAKE);
 //		Schedule schedule = new Schedule(TypeOfSchedule.RETAKE, retakes);
-//		dataProviderCsv2.exportInExcelFormat(schedule, "тестновый11.xlsx");
+//		dataProviderCsv2.exportInExcelFormat(schedule, Constants.OUTPUT_FOLDER_PATH.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE));
 //	}
 }
 

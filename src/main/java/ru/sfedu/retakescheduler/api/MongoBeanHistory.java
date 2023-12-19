@@ -32,11 +32,7 @@ public class MongoBeanHistory {
 
 	public MongoBeanHistory() {
 		log.info("MongoBeanHistory [1]: class object created");
-		try {
-			mongoDbInitialize(getProperty(Constants.MONGO_DB_NAME));
-		} catch (IOException e) {
-			log.error("MongoBeanHistory[2]: error: {}", e.getMessage());
-		}
+		mongoDbInitialize(getProperty(Constants.MONGO_DB_NAME));
 	}
 
 	public MongoBeanHistory(String dbName) {
@@ -45,16 +41,12 @@ public class MongoBeanHistory {
 	}
 
 	private void mongoDbInitialize(String dbName) {
-		try {
-			MongoClientSettings settings = MongoClientSettings.builder()
-					.uuidRepresentation(UuidRepresentation.STANDARD)
-					.applyConnectionString(new ConnectionString(getProperty(Constants.MONGODB_PATH)))
-					.build();
-			MongoClient mongoClient = MongoClients.create(settings);
-			database = mongoClient.getDatabase(dbName);
-		} catch (IOException e) {
-			log.error("MongoBeanHistory [2]: {}", e.getMessage());
-		}
+		MongoClientSettings settings = MongoClientSettings.builder()
+				.uuidRepresentation(UuidRepresentation.STANDARD)
+				.applyConnectionString(new ConnectionString(getProperty(Constants.MONGODB_PATH)))
+				.build();
+		MongoClient mongoClient = MongoClients.create(settings);
+		database = mongoClient.getDatabase(dbName);
 	}
 
 	private HistoryContent createHistoryContent(Object object, String method, Status status) {

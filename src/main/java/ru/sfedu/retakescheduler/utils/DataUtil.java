@@ -3,7 +3,6 @@ package ru.sfedu.retakescheduler.utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.retakescheduler.Constants;
-import ru.sfedu.retakescheduler.api.DataProviderCsv;
 import ru.sfedu.retakescheduler.model.*;
 
 import java.lang.reflect.Field;
@@ -211,5 +210,37 @@ public class DataUtil {
 			columns[i] = allFields.get(i).getName();
 		}
 		return columns;
+	}
+
+	public static Group findGroupByDiscipline(List<ExcelRow> excelRows, List<Group> groups, Subject subject) {
+		return excelRows.stream()
+				.filter(excelRow -> excelRow.getDiscipline().equals(subject.getSubjectName()))
+				.map(ExcelRow::getGroup)
+				.flatMap(groupNumber -> groups.stream().filter(group -> group.getGroupNumber().equals(groupNumber)).findFirst().stream())
+				.findFirst()
+				.orElse(null);
+	}
+
+	public static void fillTeacherSubjectMapping(List<ExcelRow> excelRows, TeacherSubjectMapping teacherSubjectMapping, List<Teacher> teachers, List<Subject> subjects) {
+		excelRows.stream()
+				.filter(excelRow -> excelRow.getTeacherName().split(" ").length > 1) // Избавляюсь от ФИЗ-РЫ
+				.forEach(excelRow -> {
+					String[] teacherNameArr = excelRow.getTeacherName().split(" ");
+					String discipline = excelRow.getDiscipline();
+
+					Optional<Teacher> optionalTeacher = teachers.stream()
+							.filter(teacher -> teacher.getLastName().equals(teacherNameArr[0])
+									&& teacher.getFirstName().equals(teacherNameArr[1])
+									&& teacher.getPatronymic().equals(teacherNameArr[2]))
+							.findFirst();
+
+					Optional<Subject> optionalSubject = subjects.stream()
+							.filter(subject -> subject.getSubjectName().equals(discipline))
+							.findFirst();
+
+					optionalTeacher.ifPresent(teacher ->
+							optionalSubject.ifPresent(subject ->
+									teacherSubjectMapping.addTeacherSubject(teacher, subject)));
+				});
 	}
 }

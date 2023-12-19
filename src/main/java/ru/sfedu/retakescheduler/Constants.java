@@ -5,6 +5,8 @@ public class Constants {
 	public static final String YAML_CONFIG_PATH = "src/main/resources/environment.yaml";
 	public static final String XML_CONFIG_PATH = "src/main/resources/environment.xml";
 
+	public static final String OUTPUT_FOLDER_PATH = "src/main/output/";
+
 	public static final String PLANETS = "Planets";
 	public static final String MONTH = "Months";
 
@@ -30,6 +32,11 @@ public class Constants {
 	public static final String XML_FOLDER = "xml/";
 	public static final String XML_FILE_TYPE = ".xml";
 
+	public static final String POSTGRES_HOST = "POSTGRES_HOST";
+	public static final String POSTGRES_DB_NAME = "POSTGRES_DB_NAME";
+	public static final String POSTGRES_DB_USER = "POSTGRES_DB_USER";
+	public static final String POSTGRES_DB_PASSWORD = "POSTGRES_DB_PASSWORD";
+	public static final String POSTGRES_JDBC_URL = "POSTGRES_JDBC_URL";
 
 	public static final String PERSON_FILE = "people";
 	public static final String STUDENT_FILE = "students";
@@ -87,4 +94,103 @@ public class Constants {
 	public static final String MAIL_SUBJECT = "Расписание пересдач";
 	public static final String EMAIL_GREETING = "Здравствуйте, ";
 	public static final String EMAIL_MSG_CONTENT = "У вас есть незачтенные предметы:\n";
+
+	public static final String RETAKE_SCHEDULE_UNITS_TABLE_NAME = "retakeScheduleUnits";
+	public static final String MAIN_SCHEDULE_UNITS_TABLE_NAME = "mainScheduleUnits";
+	public static final String STUDENT_TABLE_NAME = "students";
+	public static final String TEACHER_TABLE_NAME = "teachers";
+	public static final String GROUP_TABLE_NAME = "groups";
+	public static final String SUBJECT_TABLE_NAME = "subjects";
+
+	public static final String SCHEDULE_UNIT_ID_FIELD = "scheduleUnitId";
+	public static final String STUDENT_ID_FIELD = "studentId";
+	public static final String TEACHER_ID_FIELD = "teacherId";
+	public static final String SUBJECT_ID_FIELD = "subjectId";
+	public static final String GROUP_ID_FIELD = "groupNumber";
+	public static final String PERSON_LASTNAME_FIELD = "lastName";
+	public static final String PERSON_FIRSTNAME_FIELD = "firstName";
+	public static final String PERSON_PATRONYMIC_FIELD = "patronymic";
+	public static final String PERSON_EMAIL_FIELD = "email";
+	public static final String STUDENT_AVERAGE_SCORE_FIELD = "averageScore";
+	public static final String SUBJECT_NAME_FIELD = "subjectName";
+	public static final String SUBJECT_CONTROL_TYPE_FIELD = "controlType";
+	public static final String GROUP_COURSE_FIELD = "course";
+	public static final String GROUP_LEVEL_OF_TRAINING_FIELD = "levelOfTraining";
+	public static final String BUSY_DAY_FIELD = "busyDay";
+	public static final String SCHEDULE_UNIT_DATETIME_FIELD = "dateTime";
+	public static final String SCHEDULE_LOCATION_FIELD = "location";
+
+	public static final String SQL_CREATE_STUDENT_TABLE = """
+                CREATE TABLE IF NOT EXISTS students (
+                    studentId VARCHAR(255) PRIMARY KEY,
+                    lastName VARCHAR(255),
+                    firstName VARCHAR(255),
+                    patronymic VARCHAR(255),
+                    email VARCHAR(255),
+                    averageScore DOUBLE PRECISION
+                );
+			""";
+	public static final String SQL_CREATE_TEACHER_TABLE = """
+                CREATE TABLE IF NOT EXISTS teachers (
+                    teacherId VARCHAR(255) PRIMARY KEY,
+                    lastName VARCHAR(255),
+                    firstName VARCHAR(255),
+                    patronymic VARCHAR(255),
+                    email VARCHAR(255),
+                    busyDay TIMESTAMPTZ
+                );
+			""";
+	public static final String SQL_CREATE_SUBJECT_TABLE = """
+	            CREATE TABLE IF NOT EXISTS subjects (
+	                subjectId VARCHAR(255) PRIMARY KEY,
+	                subjectName VARCHAR(255),
+	                controlType VARCHAR(255)
+	            );
+			""";
+	public static final String SQL_CREATE_GROUP_TABLE = """
+				CREATE TABLE IF NOT EXISTS groups (
+			        groupNumber VARCHAR(255) PRIMARY KEY,
+			        course INT,
+			        levelOfTraining VARCHAR(255),
+			        busyDay TIMESTAMPTZ
+			    );
+			""";
+	public static final String SQL_CREATE_GROUP_STUDENT_TABLE = """
+				CREATE TABLE IF NOT EXISTS groupStudent (
+				    groupNumber VARCHAR(255),
+				    studentId VARCHAR(255),
+				    PRIMARY KEY (groupNumber, studentId),
+				    FOREIGN KEY (groupNumber) REFERENCES groups(groupNumber) ON DELETE CASCADE,
+				    FOREIGN KEY (studentId) REFERENCES students(studentId) ON DELETE CASCADE
+				);
+			""";
+
+	public static final String SQL_CREATE_SCHEDULE_UNIT_TABLE = """
+				CREATE TABLE IF NOT EXISTS %s (
+				    scheduleUnitId VARCHAR(255) PRIMARY KEY,
+				    dateTime TIMESTAMPTZ,
+				    location VARCHAR(255),
+				    subjectId VARCHAR(255),
+				    teacherId VARCHAR(255),
+				    groupNumber VARCHAR(255),
+				    FOREIGN KEY (subjectId) REFERENCES subjects(subjectId) ON DELETE CASCADE,
+				    FOREIGN KEY (teacherId) REFERENCES teachers(teacherId) ON DELETE CASCADE,
+				    FOREIGN KEY (groupNumber) REFERENCES groups(groupNumber) ON DELETE CASCADE
+				);
+			""";
+
+	public static final String SQL_INSERT_TEACHER = "INSERT INTO teachers (teacherId, lastName, firstName, patronymic, email, busyDay) VALUES (?, ?, ?, ?, ?, ?)";
+	public static final String SQL_INSERT_STUDENT = "INSERT INTO students (studentId, lastName, firstName, patronymic, email, averageScore) VALUES (?, ?, ?, ?, ?, ?)";
+	public static final String SQL_INSERT_SUBJECT = "INSERT INTO subjects (subjectId, subjectName, controlType) VALUES (?, ?, ?)";
+	public static final String SQL_INSERT_GROUP = "INSERT INTO groups (groupNumber, course, levelOfTraining, busyDay) VALUES (?, ?, ?, ?)";
+	public static final String SQL_INSERT_GROUP_STUDENT = "INSERT INTO groupStudent (groupNumber, studentId) VALUES (?, ?)";
+	public static final String SQL_INSERT_SCHEDULE_UNIT = "INSERT INTO %s (scheduleUnitId, dateTime, location, subjectId, teacherId, groupNumber) VALUES (?, ?, ?, ?, ?, ?)";
+
+	public static final String SQL_SELECT_COUNT_STUDENTS = "SELECT COUNT(*) FROM students WHERE studentId = '%s'";
+	public static final String SQL_SELECT_BY_ID = "SELECT * FROM %s WHERE %s = '%s'";
+	public static final String SQL_SELECT_STUDENTS_ID_BY_GROUP = "SELECT s.studentId FROM students s JOIN groupStudent gs ON s.studentId=gs.studentId WHERE gs.groupNumber = '%s'";
+	public static final String SQL_SELECT_ALL_RECORDS = "SELECT * FROM %s";
+
+	public static final String SQL_DELETE_ENTITY = "DELETE FROM %s WHERE %s = '%s'";
+
 }

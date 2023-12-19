@@ -375,7 +375,6 @@ public class DataProviderXmlTest extends BaseTest {
 		assertEquals("there is no group with this id", exception.getMessage());
 	}
 
-	// Тесты для getSubjectById
 	@Test
 	public void testGetSubjectByIdPositive() throws Exception {
 		log.debug("testGetSubjectByIdPositive[1]: test start");
@@ -431,6 +430,19 @@ public class DataProviderXmlTest extends BaseTest {
 		log.debug("createTestSchedule[2]: test main schedule: {}", mainSchedule);
 		saveRecords(mainSchedule.getUnits(), mainScheduleUnitsFile, ScheduleUnit.class);
 		assertNotNull(mainSchedule.getUnits());
+	}
+
+	@Test
+	public void testCreateSchedule() {
+		log.debug("testCreateSchedule[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN, dataProviderXml2.getAllScheduleUnits(TypeOfSchedule.MAIN));
+		LocalDate startDate = LocalDate.of(2023, 11, 27);
+		LocalDate endDate = LocalDate.of(2023, 12, 15);
+
+		Schedule result = dataProviderXml2.createSchedule(schedule, startDate, endDate, false, false);
+		saveRecords(result.getUnits(), retakeScheduleUnitsFile, ScheduleUnit.class);
+		assertNotNull(result);
+		log.debug("testCreateSchedule[2]: created schedule: {}", result);
 	}
 
 	@Test

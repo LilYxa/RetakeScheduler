@@ -165,3 +165,8 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+*.properties
+*.xml
+*.yml
+*.csv

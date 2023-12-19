@@ -1,6 +1,9 @@
 package ru.sfedu.retakescheduler.utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.sfedu.retakescheduler.Constants;
+import ru.sfedu.retakescheduler.api.DataProviderPostgres;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +11,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class PropertiesConfigUtil {
+	private static final Logger log = LogManager.getLogger(DataProviderPostgres.class);
 	private static String configPath = "";
 	private static final Properties config = new Properties();
 
@@ -44,7 +48,13 @@ public class PropertiesConfigUtil {
 		}
 	}
 
-	public static String getProperty(String key) throws IOException {
-		return getConfiguration().getProperty(key);
+	public static String getProperty(String key) {
+		log.debug("getProperty[1]: key: {}", key);
+		try {
+			return getConfiguration().getProperty(key);
+		} catch (IOException e) {
+			log.error("getProperty[2]: error: {}", e.getMessage());
+		}
+		return "";
 	}
 }

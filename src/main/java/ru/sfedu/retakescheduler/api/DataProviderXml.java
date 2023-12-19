@@ -1,16 +1,11 @@
 package ru.sfedu.retakescheduler.api;
 
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.Marshaller;
-import jakarta.xml.bind.Unmarshaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
 
-import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.*;
 
 import static ru.sfedu.retakescheduler.utils.DataUtil.*;
@@ -385,10 +380,5 @@ public class DataProviderXml implements IDataProvider{
 		saveRecords(subjects, subjectsFile, Subject.class);
 		saveRecords(teachers, teachersFile, Teacher.class);
 		log.debug("dataTransform[3]: records were saved in XML files");
-	}
-
-	@Override
-	public Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) {
-		return null;
 	}
 }

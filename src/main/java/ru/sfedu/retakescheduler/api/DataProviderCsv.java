@@ -1,41 +1,25 @@
 package ru.sfedu.retakescheduler.api;
 
 import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
-import com.opencsv.bean.*;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
-import ru.sfedu.retakescheduler.utils.FileUtil;
 
 import static ru.sfedu.retakescheduler.utils.DataUtil.*;
 import static ru.sfedu.retakescheduler.utils.CsvUtil.*;
-import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.*;
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 
 import java.io.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DataProviderCsv implements IDataProvider {
 
@@ -475,8 +459,6 @@ public class DataProviderCsv implements IDataProvider {
 	public void saveGroups(List<Group> groups) {
 		log.debug("saveGroups[1]: save groups: {}", groups);
 		try (CSVWriter csvWriter = new CSVWriter(new FileWriter(groupsFile))) {
-//			String[] header = {"groupNumber", "course", "levelOfTraining", "busyDay", "studentId"};
-//			csvWriter.writeNext(header);
 
 			groups.stream()
 					.flatMap(group -> group.getStudents().stream()
@@ -528,209 +510,4 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("dataTransform[3]: records were saved in CSV files");
 	}
 
-	public Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) {
-		log.debug("createSchedule[1]: scheduling retakes from {} to {}", startDate, endDate);
-		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
-		File file = files.get(0);
-		List<ExcelRow> excelRows = dataLoading(file.getPath());
-
-		List<Group> groups = getAllGroups();
-		List<Teacher> teachers = getAllTeachers();
-		List<Subject> subjects = getAllSubjects();
-		List<Student> students = getAllStudents();
-
-		LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.of(8, 0));
-		LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.of(17, 50));
-
-		TeacherSubjectMapping teacherSubjectMapping = new TeacherSubjectMapping();
-		fillTeacherSubjectMapping(excelRows, teacherSubjectMapping, teachers, subjects);
-
-		List<ScheduleUnit> retakes = new ArrayList<>();
-
-		// Продолжительность урока (в минутах)
-		int lessonDuration = Constants.LESSON_DURATION;
-
-		for (LocalDateTime currentDate = startDateTime; currentDate.isBefore(endDateTime); currentDate = currentDate.plusDays(1)) {
-			if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
-				for (Subject subject : subjects) {
-					if (LocalTime.of(currentDate.getHour(), currentDate.getMinute()).isAfter(LocalTime.of(17, 50))) {
-						currentDate = currentDate.plusDays(1);
-						currentDate = currentDate.withHour(8).withMinute(0);
-					}
-
-					Group group = findGroupByDiscipline(excelRows, groups, subject);
-					Teacher teacher = teacherSubjectMapping.getTeacherBySubject(subject);
-
-					// Проверка, не занят ли учитель в текущий день
-					if (teacher != null && !teacher.getBusyDay().equals(currentDate) && !teacher.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
-						// Проверка, не занята ли группа в текущий день
-						if (group != null && !group.getBusyDay().equals(currentDate) && !group.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
-
-							// Проверка наложения с основным расписанием
-							if (!isOverlapping(mainSchedule, currentDate, lessonDuration)) {
-								ScheduleUnit retakeUnit = new ScheduleUnit();
-								retakeUnit.setSubjectId(subject.getSubjectId());
-								retakeUnit.setPersonId(teacher.getTeacherId());
-								retakeUnit.setLocation("IVTiPT");
-								retakeUnit.setGroupNumber(group.getGroupNumber());
-								retakeUnit.setDateTime(currentDate);
-
-								retakes.add(retakeUnit);
-							}
-							currentDate = currentDate.plusMinutes(lessonDuration);
-						}
-					}
-				}
-			}
-		}
-		Schedule retakeSchedule = new Schedule(TypeOfSchedule.RETAKE, retakes);
-
-		if (sendEmail) {
-			sendEmail(retakeSchedule, students);
-		}
-
-		if (exportToExcel) {
-			try {
-				exportInExcelFormat(retakeSchedule, Constants.EXCEL_FOLDER.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE));
-			} catch (Exception e) {
-				log.error("createSchedule[2]: error: {}", e.getMessage());
-			}
-		}
-
-		return retakeSchedule;
-	}
-
-	// Метод проверки наложения с основным расписанием
-	private boolean isOverlapping(Schedule mainSchedule, LocalDateTime startTime, int lessonDuration) {
-		LocalDateTime endTime = startTime.plusMinutes(lessonDuration);
-
-		return mainSchedule.getUnits().stream()
-				.anyMatch(mainSubject -> {
-					LocalDateTime mainStartTime = mainSubject.getDateTime();
-					LocalDateTime mainEndTime = mainStartTime.plusMinutes(lessonDuration);
-
-					return startTime.isBefore(mainEndTime) && endTime.isAfter(mainStartTime);
-				});
-	}
-
-	private static Group findGroupByDiscipline(List<ExcelRow> excelRows, List<Group> groups, Subject subject) {
-		return excelRows.stream()
-				.filter(excelRow -> excelRow.getDiscipline().equals(subject.getSubjectName()))
-				.map(ExcelRow::getGroup)
-				.flatMap(groupNumber -> groups.stream().filter(group -> group.getGroupNumber().equals(groupNumber)).findFirst().stream())
-				.findFirst()
-				.orElse(null);
-	}
-
-	private static void fillTeacherSubjectMapping(List<ExcelRow> excelRows, TeacherSubjectMapping teacherSubjectMapping, List<Teacher> teachers, List<Subject> subjects) {
-		excelRows.stream()
-				.filter(excelRow -> excelRow.getTeacherName().split(" ").length > 1) // Избавляюсь от ФИЗ-РЫ
-				.forEach(excelRow -> {
-					String[] teacherNameArr = excelRow.getTeacherName().split(" ");
-					String discipline = excelRow.getDiscipline();
-
-					Optional<Teacher> optionalTeacher = teachers.stream()
-							.filter(teacher -> teacher.getLastName().equals(teacherNameArr[0])
-									&& teacher.getFirstName().equals(teacherNameArr[1])
-									&& teacher.getPatronymic().equals(teacherNameArr[2]))
-							.findFirst();
-
-					Optional<Subject> optionalSubject = subjects.stream()
-							.filter(subject -> subject.getSubjectName().equals(discipline))
-							.findFirst();
-
-					optionalTeacher.ifPresent(teacher ->
-							optionalSubject.ifPresent(subject ->
-									teacherSubjectMapping.addTeacherSubject(teacher, subject)));
-				});
-	}
-
-
-	private void sendEmail(Schedule schedule, List<Student> students) {
-		log.debug("sendMail[1]: send mail to students: {}", students);
-		String username = "";
-		String password = "";
-		Properties props = null;
-		try {
-			username = getProperty(Constants.SMTP_EMAIL);
-			password = getProperty(Constants.SMTP_PASSWORD);
-
-			props = new Properties();
-			props.put(Constants.SMTP_PROP_AUTH, getProperty(Constants.SMTP_AUTH_FIELD));
-			props.put(Constants.SMTP_PROP_TLS, getProperty(Constants.SMTP_TLS_FIELD));
-			props.put(Constants.SMTP_PROP_HOST, getProperty(Constants.SMTP_HOST_FIELD));
-			props.put(Constants.SMTP_PROP_PORT, getProperty(Constants.SMTP_PORT_FIELD));
-		} catch (IOException e) {
-			log.error("sendEmail[2]: error: {}", e.getMessage());
-		}
-
-		String finalUsername = username;
-		String finalPassword = password;
-
-		Session session = Session.getInstance(props, new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(finalUsername, finalPassword);
-			}
-		});
-
-		for (Student student : students) {
-			try {
-				Message message = new MimeMessage(session);
-				message.setFrom(new InternetAddress(username));
-				message.setSubject(Constants.MAIL_SUBJECT);
-
-				String email = student.getEmail();
-				message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
-
-				StringBuilder emailContent = new StringBuilder();
-				emailContent.append(Constants.EMAIL_GREETING).append(student.getLastName()).append(" ").append(student.getFirstName()).append(" ").append(student.getPatronymic()).append("\n");
-				emailContent.append(Constants.EMAIL_MSG_CONTENT);
-
-				message.setText(emailContent.toString());
-				Transport.send(message);
-
-			} catch (MessagingException e) {
-				log.error("sendMail[3]: error: {}", e.getMessage());
-			}
-		}
-	}
-
-	private void exportInExcelFormat(Schedule schedule, String pathToFile) throws Exception {
-		log.debug("exportInExcelFormat[1]: export schedule to file: {}", pathToFile);
-		List<ScheduleUnit> scheduleUnits = schedule.getUnits();
-		try (Workbook workbook = new XSSFWorkbook()) {
-			Sheet sheet = workbook.createSheet("Расписание пересдач");
-
-			Row headerRow = sheet.createRow(0);
-			headerRow.createCell(0).setCellValue("Номер группы");
-			headerRow.createCell(1).setCellValue("Предмет");
-			headerRow.createCell(2).setCellValue("Дата и время");
-			headerRow.createCell(3).setCellValue("Место");
-			headerRow.createCell(4).setCellValue("Преподаватель");
-
-
-			int rowNum = 1;
-			for (ScheduleUnit scheduleUnit : scheduleUnits) {
-				Row row = sheet.createRow(rowNum++);
-				row.createCell(0).setCellValue(scheduleUnit.getGroupNumber());
-
-				Subject subject = getSubjectById(scheduleUnit.getSubjectId());
-				Teacher teacher = getTeacherById(scheduleUnit.getPersonId());
-				String teacherFullname = teacher.getLastName() + " " + teacher.getFirstName() + " " + teacher.getPatronymic();
-
-				row.createCell(1).setCellValue(subject.getSubjectName());
-				row.createCell(2).setCellValue(scheduleUnit.getDateTime().toString());
-				row.createCell(3).setCellValue(scheduleUnit.getLocation());
-				row.createCell(4).setCellValue(teacherFullname);
-			}
-
-			try (FileOutputStream fileOutputStream = new FileOutputStream(pathToFile)) {
-				workbook.write(fileOutputStream);
-				log.debug("exportInExcelFormat[2]: export completed successfully");
-			}
-		} catch (IOException e) {
-			log.error("exportInExcelFormat[3]: error: {}", e.getMessage());
-		}
-	}
 }

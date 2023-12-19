@@ -6,9 +6,7 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ru.sfedu.retakescheduler.utils.LocalDateAdapter;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 @XmlRootElement
