@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Random;
 
 public class BaseTest {
-	private static final Logger log = LogManager.getLogger(DataProviderCsv.class);
+	private static final Logger log = LogManager.getLogger(BaseTest.class);
 
 	public Schedule createTestSchedule(IDataProvider dataProvider) {
 		List<ScheduleUnit> schedule = new ArrayList<>();
@@ -21,6 +21,9 @@ public class BaseTest {
 
 		LocalDateTime currentDate = LocalDateTime.of(2023, 11, 27, 8, 0);
 		LocalDateTime endDate = LocalDateTime.of(2023, 12, 1, 17, 25);
+		List<Group> testGroups = dataProvider.getAllGroups();
+		List<Subject> testSubjects = dataProvider.getAllSubjects();
+		List<Teacher> testTeachers = dataProvider.getAllTeachers();
 
 		int[] pairsPerDay = {3, 2, 4, 3, 5}; // Количество пар в каждый день недели
 
@@ -39,7 +42,8 @@ public class BaseTest {
 					scheduleUnit.setDateTime(currentDate);
 
 					// Рандомно создаем предмет
-					Subject testSubject = new Subject("Test Subject", "Test Type");
+//					Subject testSubject = new Subject("1wfwef-hbehdh-qwwqq-dw1sqs","Test Subject", "Test Type");
+					Subject testSubject = testSubjects.get(0);
 					scheduleUnit.setSubjectId(testSubject.getSubjectId());
 
 					scheduleUnit.setLocation("Classroom 101");
@@ -48,10 +52,11 @@ public class BaseTest {
 					LocalDate currentLocalDate = LocalDate.now();
 					int randomDays = random.nextInt(7);
 					LocalDate randomDate = currentLocalDate.plusDays(randomDays);
-					Teacher teacher = new Teacher("Doe", "John", "Johnovich", "john@mail.ru", randomDate);
+//					Teacher teacher = new Teacher("Doe", "John", "Johnovich", "john@mail.ru", "4e61290b-c004-491e-8c7a-ee194711ee47", randomDate);
+					Teacher teacher = testTeachers.get(0);
 					scheduleUnit.setPersonId(teacher.getTeacherId());
 
-					List<Group> testGroups = dataProvider.getAllGroups();
+//					List<Group> testGroups = dataProvider.getAllGroups();
 					Group testGroup = testGroups.stream()
 							.skip(new Random().nextInt(testGroups.size()))
 							.findFirst()

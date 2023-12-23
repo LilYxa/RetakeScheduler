@@ -158,12 +158,18 @@ public class DataProviderCsv implements IDataProvider {
 		save(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class, getObjectFields(scheduleUnit));
 	}
 
+	public void saveSchedule(Schedule schedule) {
+		log.debug("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
+		String scheduleUnitsFile = schedule.getTypeOfSchedule().equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
+		saveRecords(schedule.getUnits(), scheduleUnitsFile, ScheduleUnit.class, getObjectFields(new ScheduleUnit()));
+	}
+
 	@Override
 	public void saveSubject(Subject subject) throws Exception {
 		log.debug("saveSubject[1]: save Subject: {}", subject);
 
 		List<Subject> subjects = getAllRecords(subjectsFile, Subject.class);
-		checkIfEntityExist(subjects, subject, "this subject already exist");
+		checkIfEntityExist(subjects, subject, "this subject already exists");
 		subjects.add(subject);
 		save(subject, subjectsFile, Subject.class, getObjectFields(subject));
 	}

@@ -95,6 +95,12 @@ public class DataProviderXml implements IDataProvider{
 		saveRecord(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class);
 	}
 
+	public void saveSchedule(Schedule schedule) {
+		log.debug("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
+		String scheduleUnitsFile = schedule.getTypeOfSchedule().equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
+		saveRecords(schedule.getUnits(), scheduleUnitsFile, ScheduleUnit.class);
+	}
+
 	@Override
 	public void saveSubject(Subject subject) throws Exception {
 		log.debug("saveSubject[1]: save {}", subject);

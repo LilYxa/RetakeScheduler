@@ -1,5 +1,9 @@
 package ru.sfedu.retakescheduler;
 
+import ru.sfedu.retakescheduler.utils.FileUtil;
+
+import java.io.File;
+
 public class Constants {
 	public static final String PROPERTIES_CONFIG_PATH = "src/main/resources/environment.properties";
 	public static final String YAML_CONFIG_PATH = "src/main/resources/environment.yaml";
@@ -51,6 +55,7 @@ public class Constants {
 	public static final String EXCEL_FILE_TYPE = ".xls.xlsx";
 	public static final String EXCEL_RETAKE_SCHEDULE_FILE = "Расписание пересдач.xlsx";
 	public static final String WORD_FOLDER = "src/main/resources/word/";
+	public static final String DEFAULT_PATH_EXCEL_FILE = FileUtil.getListFilesInFolder(EXCEL_FOLDER).get(0).getPath();
 
 	public static final String NAME_REGEX = "^[a-zA-Zа-яА-ЯёЁ]{2,25}$";
 	public static final String PATRONYMIC_REGEX = "^[a-zA-Zа-яА-ЯёЁ]{0,25}$";
@@ -66,6 +71,9 @@ public class Constants {
 	public static final String TRAINING_LEVEL_FIELD = "levelOfTraining";
 	public static final String SUBJECT_FIELD = "subject";
 	public static final String CONTROL_TYPE_FIELD = "controlType";
+
+	public static final String MAIN_SCHEDULE_TYPE = "MAIN";
+	public static final String RETAKE_SCHEDULE_TYPE = "RETAKE";
 
 	public static final String INCORRECT_FIRSTNAME = "Имя может состоять из букв латинского и русского алфавита длиною от 2 до 25 символов";
 	public static final String INCORRECT_LASTNAME = "Фамилия может состоять из букв латинского и русского алфавита длиною от 2 до 25 символов";
@@ -101,6 +109,7 @@ public class Constants {
 	public static final String TEACHER_TABLE_NAME = "teachers";
 	public static final String GROUP_TABLE_NAME = "groups";
 	public static final String SUBJECT_TABLE_NAME = "subjects";
+	public static final String GROUP_STUDENT_TABLE_NAME = "groupStudent";
 
 	public static final String SCHEDULE_UNIT_ID_FIELD = "scheduleUnitId";
 	public static final String STUDENT_ID_FIELD = "studentId";
@@ -180,11 +189,17 @@ public class Constants {
 			""";
 
 	public static final String SQL_INSERT_TEACHER = "INSERT INTO teachers (teacherId, lastName, firstName, patronymic, email, busyDay) VALUES (?, ?, ?, ?, ?, ?)";
+	public static final String SQL_INSERT_TEACHER_TEST = "INSERT INTO teachers (teacherId, lastName, firstName, patronymic, email, busyDay) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')";
 	public static final String SQL_INSERT_STUDENT = "INSERT INTO students (studentId, lastName, firstName, patronymic, email, averageScore) VALUES (?, ?, ?, ?, ?, ?)";
+	public static final String SQL_INSERT_STUDENT_TEST = "INSERT INTO students (studentId, lastName, firstName, patronymic, email, averageScore) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')";
 	public static final String SQL_INSERT_SUBJECT = "INSERT INTO subjects (subjectId, subjectName, controlType) VALUES (?, ?, ?)";
+	public static final String SQL_INSERT_SUBJECT_TEST = "INSERT INTO subjects (subjectId, subjectName, controlType) VALUES ('%s', '%s', '%s')";
 	public static final String SQL_INSERT_GROUP = "INSERT INTO groups (groupNumber, course, levelOfTraining, busyDay) VALUES (?, ?, ?, ?)";
+	public static final String SQL_INSERT_GROUP_TEST = "INSERT INTO groups (groupNumber, course, levelOfTraining, busyDay) VALUES ('%s', '%s', '%s', '%s')";
 	public static final String SQL_INSERT_GROUP_STUDENT = "INSERT INTO groupStudent (groupNumber, studentId) VALUES (?, ?)";
+	public static final String SQL_INSERT_GROUP_STUDENT_TEST = "INSERT INTO groupStudent (groupNumber, studentId) VALUES ('%s', '%s')";
 	public static final String SQL_INSERT_SCHEDULE_UNIT = "INSERT INTO %s (scheduleUnitId, dateTime, location, subjectId, teacherId, groupNumber) VALUES (?, ?, ?, ?, ?, ?)";
+	public static final String SQL_INSERT_SCHEDULE_UNIT_TEST = "INSERT INTO %s (scheduleUnitId, dateTime, location, subjectId, teacherId, groupNumber) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')";
 
 	public static final String SQL_SELECT_COUNT_STUDENTS = "SELECT COUNT(*) FROM students WHERE studentId = '%s'";
 	public static final String SQL_SELECT_BY_ID = "SELECT * FROM %s WHERE %s = '%s'";
@@ -192,5 +207,71 @@ public class Constants {
 	public static final String SQL_SELECT_ALL_RECORDS = "SELECT * FROM %s";
 
 	public static final String SQL_DELETE_ENTITY = "DELETE FROM %s WHERE %s = '%s'";
+
+	public static final String SQL_TRUNCATE_TABLE = "TRUNCATE TABLE %s CASCADE";
+
+	public static final String CONFIG_PATH_SYSTEM_PROPERTY = "configPath";
+	public static final String LOG4J_PATH_SYSTEM_PROPERTY = "log4jPath";
+
+	public static final String CLI_DATA_TYPE = "dType";
+	public static final String CLI_NEW_STUDENT = "nst";
+	public static final String CLI_NEW_TEACHER = "nt";
+	public static final String CLI_NEW_GROUP = "ng";
+	public static final String CLI_NEW_SCHEDULE_UNIT = "nsu";
+	public static final String CLI_NEW_SUBJECT = "ns";
+	public static final String CLI_DELETE_RECORD = "d";
+	public static final String CLI_DELETE_SCHEDULE_UNIT = "dsu";
+	public static final String CLI_DATA_TRANSFORM = "dt";
+	public static final String CLI_CREATE_MAIN_SCHEDULE = "cms";
+	public static final String CLI_CREATE_RETAKE_SCHEDULE = "crs";
+	public static final String CLI_HELP = "help";
+
+	public static final String CLI_PRINT_HELP_HEADER = "--OPTIONS--";
+	public static final String CLI_PRINT_HELP_FOOTER = "--HELP--";
+	public static final String CLI_COMMAND_SYNTAX = "java -DconfigPath=<путь к файлу конфигураций свойств> -Dlog4jpath=<путь к файлу конфигураций логгера> -jar RetakeScheduler.jar";
+
+	public static final String CLI_ARGS_NAME_DATA_TYPE = "data_type";
+	public static final String CLI_ARGS_NAME_NEW_STUDENT = "last_name first_name patronymic email average_score";
+	public static final String CLI_ARGS_NAME_NEW_TEACHER = "last_name first_name patronymic email busy_day";
+	public static final String CLI_ARGS_NAME_NEW_GROUP = "group_number course level_of_training busy_day students";
+	public static final String CLI_ARGS_NAME_NEW_SCHEDULE_UNIT = "schedule_type date_time subject_id location teacher_id group_number";
+	public static final String CLI_ARGS_NAME_NEW_SUBJECT = "subject_name control_type";
+	public static final String CLI_ARGS_NAME_DELETE_RECORD = "entity_type entity_id";
+	public static final String CLI_ARGS_NAME_DELETE_SCHEDULE_UNIT = "type schedule_unit_id";
+	public static final String CLI_ARGS_NAME_DATA_TRANSFORM = "path_to_file";
+	public static final String CLI_ARGS_NAME_CREATE_MAIN_SCHEDULE = "data_provider";
+	public static final String CLI_ARGS_NAME_CREATE_RETAKE_SCHEDULE = "start_date end_date export_to_excel send_email";
+	public static final String CLI_ARGS_LAST_NAME = "last_name";
+	public static final String CLI_ARGS_FIRST_NAME = "first_name";
+	public static final String CLI_ARGS_PATRONYMIC = "patronymic";
+	public static final String CLI_ARGS_EMAIL = "email";
+	public static final String CLI_ARGS_STUDENT_ID = "student_id";
+	public static final String CLI_ARGS_AVERAGE_SCORE = "average_score";
+	public static final String CLI_ARGS_TEACHER_ID = "teacher_id";
+	public static final String CLI_ARGS_BUSY_DAY = "busy_day";
+	public static final String CLI_ARGS_GROUP_NUMBER = "group_number";
+	public static final String CLI_ARGS_COURSE = "course";
+	public static final String CLI_ARGS_LEVEL_OF_TRAINING = "level_of_training";
+	public static final String CLI_ARGS_STUDENTS = "students";
+	public static final String CLI_ARGS_SCHEDULE_UNIT_ID = "schedule_unit_id";
+	public static final String CLI_ARGS_DATE_TIME = "date_time";
+	public static final String CLI_ARGS_LOCATION = "location";
+	public static final String CLI_ARGS_SUBJECT_ID = "subject_id";
+	public static final String CLI_ARGS_SUBJECT_NAME = "subject_name";
+	public static final String CLI_ARGS_CONTROL_TYPE = "control_type";
+
+	public static final String CLI_DESCRIPTION_DATA_TYPE = "Указание типа данных (CSV, XML, Postgres). По умолчанию XML";
+	public static final String CLI_DESCRIPTION_NEW_STUDENT = "Создание новой записи о студенте.";
+	public static final String CLI_DESCRIPTION_NEW_TEACHER = "Создание новой записи о преподавателе.";
+	public static final String CLI_DESCRIPTION_NEW_GROUP = "Создание новой записи о группе студентов.";
+	public static final String CLI_DESCRIPTION_NEW_SCHEDULE_UNIT = "Создание новой записи о занятии в расписании.";
+	public static final String CLI_DESCRIPTION_NEW_SUBJECT = "Создание новой записи о предмете.";
+	public static final String CLI_DESCRIPTION_DELETE_RECORD = "Удаление записи по указанному идентификатору и типу сущности.";
+	public static final String CLI_DESCRIPTION_DELETE_SCHEDULE_UNIT = "Удаление ячейки расписания по указанному идентификатору и типу расписания.";
+	public static final String CLI_DESCRIPTION_DATA_TRANSFORM = "Выполнение преобразования данных из Excel формата в другой (CSV, XML, Postgres).";
+	public static final String CLI_DESCRIPTION_CREATE_MAIN_SCHEDULE = "Создание основного расписания с занятиями для всех групп и преподавателей.";
+	public static final String CLI_DESCRIPTION_CREATE_RETAKE_SCHEDULE = "Создание расписания пересдач для студентов.";
+	public static final String CLI_DESCRIPTION_HELP = "Вспомогательная информация по использованию данного сервиса";
+
 
 }

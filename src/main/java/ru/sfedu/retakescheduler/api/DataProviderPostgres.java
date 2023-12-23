@@ -5,16 +5,18 @@ import org.apache.logging.log4j.Logger;
 
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
+import ru.sfedu.retakescheduler.utils.mappers.GroupEntityMapper;
+import ru.sfedu.retakescheduler.utils.mappers.StudentEntityMapper;
+import ru.sfedu.retakescheduler.utils.mappers.SubjectEntityMapper;
+import ru.sfedu.retakescheduler.utils.mappers.TeacherEntityMapper;
 
 import static ru.sfedu.retakescheduler.utils.DataUtil.*;
 import static ru.sfedu.retakescheduler.utils.DataUtil.validation;
 import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.getProperty;
 import static ru.sfedu.retakescheduler.utils.PostgresUtil.*;
-import static ru.sfedu.retakescheduler.utils.XmlUtil.saveRecords;
 
 import java.sql.*;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 public class DataProviderPostgres implements IDataProvider{
@@ -84,8 +86,17 @@ public class DataProviderPostgres implements IDataProvider{
 	@Override
 	public void saveStudent(Student student) throws Exception {
 		log.debug("saveStudent[1]: save student: {}", student);
-		String sql = generateInsertQuery(
-				Constants.SQL_INSERT_STUDENT,
+//		String sql = generateInsertQuery(
+//				Constants.SQL_INSERT_STUDENT,
+//				student.getStudentId(),
+//				student.getLastName(),
+//				student.getFirstName(),
+//				student.getPatronymic(),
+//				student.getEmail(),
+//				student.getAverageScore()
+//		);
+		String sql = String.format(
+				Constants.SQL_INSERT_STUDENT_TEST,
 				student.getStudentId(),
 				student.getLastName(),
 				student.getFirstName(),
@@ -107,15 +118,24 @@ public class DataProviderPostgres implements IDataProvider{
 	@Override
 	public void saveTeacher(Teacher teacher) throws Exception {
 		log.debug("saveTeacher[1]: save teacher: {}", teacher);
-		String sql = generateInsertQuery(
-				Constants.SQL_INSERT_TEACHER,
+//		String sql = generateInsertQuery(
+//				Constants.SQL_INSERT_TEACHER,
+//				teacher.getTeacherId(),
+//				teacher.getLastName(),
+//				teacher.getFirstName(),
+//				teacher.getPatronymic(),
+//				teacher.getEmail(),
+//				teacher.getBusyDay()
+//		);
+		String sql = String.format(
+				Constants.SQL_INSERT_TEACHER_TEST,
 				teacher.getTeacherId(),
 				teacher.getLastName(),
 				teacher.getFirstName(),
 				teacher.getPatronymic(),
 				teacher.getEmail(),
-				teacher.getBusyDay()
-		);
+				teacher.getBusyDay().toString()
+				);
 		try (Connection connection = getConnection();
 		     Statement statement = connection.createStatement()) {
 			statement.executeUpdate(sql);
@@ -130,12 +150,19 @@ public class DataProviderPostgres implements IDataProvider{
 	@Override
 	public void saveGroup(Group group) throws Exception {
 		log.debug("saveGroup[1]: save group: {}", group);
-		String sql = generateInsertQuery(
-				Constants.SQL_INSERT_GROUP,
+//		String sql = generateInsertQuery(
+//				Constants.SQL_INSERT_GROUP,
+//				group.getGroupNumber(),
+//				group.getCourse(),
+//				group.getLevelOfTraining(),
+//				group.getBusyDay()
+//		);
+		String sql = String.format(
+				Constants.SQL_INSERT_GROUP_TEST,
 				group.getGroupNumber(),
 				group.getCourse(),
 				group.getLevelOfTraining(),
-				group.getBusyDay()
+				group.getBusyDay().toString()
 		);
 		try (Connection connection = getConnection();
 		     Statement statement = connection.createStatement()) {
@@ -185,8 +212,13 @@ public class DataProviderPostgres implements IDataProvider{
 
 	private void saveStudentAndGroupRelation(Connection connection, String groupNumber, String studentId) {
 		log.debug("saveStudentAndGroupRelation[1]: save group: {}, student: {} relation", groupNumber, studentId);
-		String sql = generateInsertQuery(
-				Constants.SQL_INSERT_GROUP_STUDENT,
+//		String sql = generateInsertQuery(
+//				Constants.SQL_INSERT_GROUP_STUDENT,
+//				groupNumber,
+//				studentId
+//		);
+		String sql = String.format(
+				Constants.SQL_INSERT_GROUP_STUDENT_TEST,
 				groupNumber,
 				studentId
 		);
@@ -203,10 +235,20 @@ public class DataProviderPostgres implements IDataProvider{
 	public void saveScheduleUnit(ScheduleUnit scheduleUnit, TypeOfSchedule type) throws Exception {
 		log.debug("saveScheduleUnit[1]: save scheduleUnit: {}, type: {}", scheduleUnit, type);
 		final String tableName = type.equals(TypeOfSchedule.MAIN) ? Constants.MAIN_SCHEDULE_UNITS_TABLE_NAME : Constants.RETAKE_SCHEDULE_UNITS_TABLE_NAME;
-		String sql = generateInsertQuery(
-				String.format(Constants.SQL_INSERT_SCHEDULE_UNIT, tableName),
+//		String sql = generateInsertQuery(
+//				String.format(Constants.SQL_INSERT_SCHEDULE_UNIT, tableName),
+//				scheduleUnit.getScheduleUnitId(),
+//				scheduleUnit.getDateTime(),
+//				scheduleUnit.getLocation(),
+//				scheduleUnit.getSubjectId(),
+//				scheduleUnit.getPersonId(),
+//				scheduleUnit.getGroupNumber()
+//		);
+		String sql = String.format(
+				Constants.SQL_INSERT_SCHEDULE_UNIT_TEST,
+				tableName,
 				scheduleUnit.getScheduleUnitId(),
-				scheduleUnit.getDateTime(),
+				scheduleUnit.getDateTime().toString(),
 				scheduleUnit.getLocation(),
 				scheduleUnit.getSubjectId(),
 				scheduleUnit.getPersonId(),
@@ -226,8 +268,14 @@ public class DataProviderPostgres implements IDataProvider{
 	@Override
 	public void saveSubject(Subject subject) throws Exception {
 		log.debug("saveSubject[1]: save subject: {}", subject);
-		String sql = generateInsertQuery(
-				Constants.SQL_INSERT_SUBJECT,
+//		String sql = generateInsertQuery(
+//				Constants.SQL_INSERT_SUBJECT,
+//				subject.getSubjectId(),
+//				subject.getSubjectName(),
+//				subject.getControlType()
+//		);
+		String sql = String.format(
+				Constants.SQL_INSERT_SUBJECT_TEST,
 				subject.getSubjectId(),
 				subject.getSubjectName(),
 				subject.getControlType()
@@ -243,14 +291,101 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveSubject[2]: sql: {}", sql);
 	}
 
-	private <T> void saveEntities(List<T> entities, ThrowingConsumer<T, Exception> saveFunction) {
-		entities.forEach(entity -> {
-			try {
-				saveFunction.accept(entity);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
+	public void saveSchedule(Schedule schedule) throws Exception {
+		log.debug("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
+		final String tableName = schedule.getTypeOfSchedule().equals(TypeOfSchedule.MAIN) ? Constants.MAIN_SCHEDULE_UNITS_TABLE_NAME : Constants.RETAKE_SCHEDULE_UNITS_TABLE_NAME;
+		try (Connection connection = getConnection();
+			Statement statement = connection.createStatement()
+		) {
+			for (ScheduleUnit scheduleUnit : schedule.getUnits()) {
+				String sql = String.format(
+						Constants.SQL_INSERT_SCHEDULE_UNIT_TEST,
+						tableName,
+						scheduleUnit.getScheduleUnitId(),
+						scheduleUnit.getDateTime().toString(),
+						scheduleUnit.getLocation(),
+						scheduleUnit.getSubjectId(),
+						scheduleUnit.getPersonId(),
+						scheduleUnit.getGroupNumber()
+				);
+				statement.addBatch(sql);
+				log.info("saveSchedule[2]: scheduleUnit: {} added to batch", scheduleUnit);
 			}
-		});
+			statement.executeBatch();
+			log.info("saveSchedule[3]: all scheduleUnits were inserted");
+		} catch (SQLException e) {
+			log.error("saveSchedule[2]: error: {}", e.getMessage());
+			throw new Exception(e);
+		}
+	}
+
+	public void saveGroups(List<Group> groups) throws Exception {
+		log.debug("saveGroups[1]: save groups: {}", groups);
+
+		try (Connection connection = getConnection();
+		     Statement statement = connection.createStatement()) {
+
+			for (Group group : groups) {
+				String sql = String.format(
+						Constants.SQL_INSERT_GROUP_TEST,
+						group.getGroupNumber(),
+						group.getCourse(),
+						group.getLevelOfTraining(),
+						group.getBusyDay().toString()
+				);
+
+				group.getStudents().forEach(student -> {
+					try {
+						saveStudentIfNotExists(student, connection);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				});
+
+				statement.addBatch(sql);
+				log.info("saveGroup[2]: group: {} added to batch", group);
+			}
+
+			// Выполнение всех запросов в одной транзакции
+			statement.executeBatch();
+
+			groups.forEach(group -> {
+				group.getStudents().stream()
+						.map(Student::getStudentId)
+						.forEach(studentId -> saveStudentAndGroupRelation(connection, group.getGroupNumber(), studentId));
+			});
+			log.info("saveGroups[3]: all groups were inserted");
+		} catch (SQLException e) {
+			log.error("saveGroups[4]: error: {}", e.getMessage());
+			throw new Exception("Error during batch insert", e);
+		}
+	}
+
+//	private <T> void saveEntities(List<T> entities, ThrowingConsumer<T, Exception> saveFunction) {
+//		entities.forEach(entity -> {
+//			try {
+//				saveFunction.accept(entity);
+//			} catch (Exception e) {
+//				throw new RuntimeException(e);
+//			}
+//		});
+//	}
+
+	public <T> void saveEntities(List<T> entities, String insertSqlFormat, EntityMapper<T> entityMapper) throws Exception {
+		log.debug("saveEntities[1]: saving entities: {}", entities);
+		try (Connection connection = getConnection();
+		     Statement statement = connection.createStatement()) {
+
+			for (T entity : entities) {
+				String insertSql = String.format(insertSqlFormat, entityMapper.mapEntity(entity));
+				statement.addBatch(insertSql);
+			}
+
+			statement.executeBatch();
+		} catch (SQLException e) {
+			log.error("saveEntities[]: error: {}", e.getMessage());
+			throw new Exception("Error during batch insert", e);
+		}
 	}
 
 	@Override
@@ -357,7 +492,7 @@ public class DataProviderPostgres implements IDataProvider{
 	@Override
 	public void deleteSubjectById(String subjectId) throws Exception {
 		log.debug("deleteSubjectById[1]: delete subject with id: {}", subjectId);
-		String sql = String.format(Constants.SQL_DELETE_ENTITY, Constants.SUBJECT_ID_FIELD, Constants.SUBJECT_ID_FIELD, subjectId);
+		String sql = String.format(Constants.SQL_DELETE_ENTITY, Constants.SUBJECT_TABLE_NAME, Constants.SUBJECT_ID_FIELD, subjectId);
 
 		try {
 			// Проверяем существование предмета перед удалением
@@ -435,7 +570,7 @@ public class DataProviderPostgres implements IDataProvider{
 			Group group = null;
 			if (resultSet.next()) {
 				group = mapResultSetToGroup(resultSet);
-				List<Student> students = getStudentsByGroup(group.getGroupNumber());
+				List<Student> students = getStudentsByGroup(group.getGroupNumber(), connection);
 				group.setStudents(students);
 			}
 
@@ -447,12 +582,12 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
-	private List<Student> getStudentsByGroup(String groupNumber) {
+	private List<Student> getStudentsByGroup(String groupNumber, Connection connection) {
 		log.debug("getStudentsByGroup[1]: get students from group: {}", groupNumber);
 		String sql = String.format(Constants.SQL_SELECT_STUDENTS_ID_BY_GROUP, groupNumber);
 		List<Student> students = new ArrayList<>();
 
-		try (Connection connection = getConnection();
+		try (
 			Statement statement = connection.createStatement();
 			ResultSet resultSet = statement.executeQuery(sql)
 		) {
@@ -548,7 +683,7 @@ public class DataProviderPostgres implements IDataProvider{
 		} catch (SQLException e) {
 			log.error("getAllTeachers[2]: error: {}", e.getMessage());
 		}
-		log.debug("getAllTeachers[3]: students: {}", teachers);
+		log.debug("getAllTeachers[3]: teachers{}", teachers);
 		return teachers;
 	}
 
@@ -564,7 +699,7 @@ public class DataProviderPostgres implements IDataProvider{
 		) {
 			while (resultSet.next()) {
 				Group group = mapResultSetToGroup(resultSet);
-				List<Student> students = getStudentsByGroup(group.getGroupNumber());
+				List<Student> students = getStudentsByGroup(group.getGroupNumber(), connection);
 				group.setStudents(students);
 				groups.add(group);
 			}
@@ -644,10 +779,15 @@ public class DataProviderPostgres implements IDataProvider{
 			throw new Exception("Errors were detected during data validation");
 		}
 
-		saveEntities(students, this::saveStudent);
-		saveEntities(teachers, this::saveTeacher);
-		saveEntities(groups, this::saveGroup);
-		saveEntities(subjects, this::saveSubject);
+//		saveEntities(students, this::saveStudent);
+//		saveEntities(teachers, this::saveTeacher);
+//		saveEntities(groups, this::saveGroup);
+//		saveEntities(subjects, this::saveSubject);
+
+		saveEntities(students, Constants.SQL_INSERT_STUDENT_TEST, new StudentEntityMapper());
+		saveEntities(teachers, Constants.SQL_INSERT_TEACHER_TEST, new TeacherEntityMapper());
+		saveEntities(subjects, Constants.SQL_INSERT_SUBJECT_TEST, new SubjectEntityMapper());
+		saveGroups(groups);
 		log.debug("dataTransform[3]: records were saved in PostgresDB files");
 	}
 }

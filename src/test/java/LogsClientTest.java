@@ -4,14 +4,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import ru.sfedu.retakescheduler.RetakeScheduler;
+import ru.sfedu.retakescheduler.Main;
 
 public class LogsClientTest {
-	private static final Logger log = LogManager.getLogger(RetakeScheduler.class);
-	private RetakeScheduler client;
+	private static final Logger log = LogManager.getLogger(Main.class);
+	private Main client;
 	@BeforeAll
 	public void initTest() {
-		client = new RetakeScheduler();
+		client = new Main();
 	}
 
 	@AfterAll

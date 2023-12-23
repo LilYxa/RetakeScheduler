@@ -21,7 +21,7 @@ public class XmlUtil {
 			File file = new File(pathToFile);
 
 			if (!file.exists() || file.length() == 0) {
-				log.error("getAllRecords[2]: file is empty or doesn't exist {}", pathToFile);
+				log.warn("getAllRecords[2]: file is empty or doesn't exist {}", pathToFile);
 				return new ArrayList<>();
 			}
 
