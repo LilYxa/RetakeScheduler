@@ -10,6 +10,10 @@ public class Schedule {
 	public Schedule() {
 	}
 
+	public Schedule(TypeOfSchedule type) {
+		this.typeOfSchedule = type;
+	}
+
 	public Schedule(TypeOfSchedule typeOfSchedule, List<ScheduleUnit> units) {
 		this.typeOfSchedule = typeOfSchedule;
 		this.units = units;

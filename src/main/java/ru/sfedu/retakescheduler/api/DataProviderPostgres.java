@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
-import ru.sfedu.retakescheduler.utils.mappers.GroupEntityMapper;
 import ru.sfedu.retakescheduler.utils.mappers.StudentEntityMapper;
 import ru.sfedu.retakescheduler.utils.mappers.SubjectEntityMapper;
 import ru.sfedu.retakescheduler.utils.mappers.TeacherEntityMapper;
@@ -39,18 +38,10 @@ public class DataProviderPostgres implements IDataProvider{
 		return connection;
 	}
 
-	private void closeConnectionAndStatement(Connection connection, Statement statement) {
-		try {
-			if (connection != null && statement != null) {
-				connection.close();
-				statement.close();
-				log.info("closeConnectionAndStatement[1]: connection and statement were closed");
-			}
-		} catch (SQLException e) {
-			log.error("closeConnectionAndStatement[2]: error: {}", e.getMessage());
-		}
-	}
-
+	/**
+	 * Creates tables in the database required for storing information about students, teachers, subjects, groups,
+	 * group-student associations, and schedule units.
+	 */
 	private void createTables() {
 		log.debug("createTables[1]: start create tables");
 		try (Connection connection = getConnection();
@@ -83,18 +74,12 @@ public class DataProviderPostgres implements IDataProvider{
 		return (field != null) ? "'" + field.toString() + "'" : "'null'";
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveStudent(Student) saveStudent} method to store data about the student.
+	 */
 	@Override
 	public void saveStudent(Student student) throws Exception {
-		log.debug("saveStudent[1]: save student: {}", student);
-//		String sql = generateInsertQuery(
-//				Constants.SQL_INSERT_STUDENT,
-//				student.getStudentId(),
-//				student.getLastName(),
-//				student.getFirstName(),
-//				student.getPatronymic(),
-//				student.getEmail(),
-//				student.getAverageScore()
-//		);
+		log.info("saveStudent[1]: save student: {}", student);
 		String sql = String.format(
 				Constants.SQL_INSERT_STUDENT_TEST,
 				student.getStudentId(),
@@ -115,18 +100,12 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveStudent[4]: sql: {}", sql);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveTeacher(Teacher) saveTeacher} method to store data about the teacher.
+	 */
 	@Override
 	public void saveTeacher(Teacher teacher) throws Exception {
-		log.debug("saveTeacher[1]: save teacher: {}", teacher);
-//		String sql = generateInsertQuery(
-//				Constants.SQL_INSERT_TEACHER,
-//				teacher.getTeacherId(),
-//				teacher.getLastName(),
-//				teacher.getFirstName(),
-//				teacher.getPatronymic(),
-//				teacher.getEmail(),
-//				teacher.getBusyDay()
-//		);
+		log.info("saveTeacher[1]: save teacher: {}", teacher);
 		String sql = String.format(
 				Constants.SQL_INSERT_TEACHER_TEST,
 				teacher.getTeacherId(),
@@ -147,16 +126,12 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveTeacher[2]: sql: {}", sql);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveGroup(Group) saveGroup} method to store data about the group.
+	 */
 	@Override
 	public void saveGroup(Group group) throws Exception {
-		log.debug("saveGroup[1]: save group: {}", group);
-//		String sql = generateInsertQuery(
-//				Constants.SQL_INSERT_GROUP,
-//				group.getGroupNumber(),
-//				group.getCourse(),
-//				group.getLevelOfTraining(),
-//				group.getBusyDay()
-//		);
+		log.info("saveGroup[1]: save group: {}", group);
 		String sql = String.format(
 				Constants.SQL_INSERT_GROUP_TEST,
 				group.getGroupNumber(),
@@ -187,6 +162,15 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveGroup[2]: sql: {}", sql);
 	}
 
+	/**
+	 * Saves a student to the database if the student does not already exist.
+	 *
+	 * @param student    The student to be saved.
+	 * @param connection The database connection.
+	 *
+	 * @throws Exception    If an exception occurs during the student saving process.
+	 *                      If an exception occurs during execution of an SQL query
+	 */
 	private void saveStudentIfNotExists(Student student, Connection connection) throws Exception {
 		String studentId = student.getStudentId();
 
@@ -196,6 +180,15 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Checks if a student with the specified student ID exists in the database.
+	 *
+	 * @param connection The database connection.
+	 * @param studentId  The student ID to check for existence.
+	 *
+	 * @return true if a student with the specified ID exists in the database, false otherwise.
+	 *
+	 */
 	private boolean doesStudentExist(Connection connection, String studentId) {
 		log.debug("doesStudentExist[1]: studentId: {}", studentId);
 		try (Statement statement = connection.createStatement();
@@ -210,13 +203,16 @@ public class DataProviderPostgres implements IDataProvider{
 		return false;
 	}
 
+	/**
+	 * Saves the relationship between a student and a group in the database.
+	 *
+	 * @param connection  The database connection.
+	 * @param groupNumber The group number to which the student belongs.
+	 * @param studentId   The student ID for whom the relationship is being established.
+	 *
+	 */
 	private void saveStudentAndGroupRelation(Connection connection, String groupNumber, String studentId) {
 		log.debug("saveStudentAndGroupRelation[1]: save group: {}, student: {} relation", groupNumber, studentId);
-//		String sql = generateInsertQuery(
-//				Constants.SQL_INSERT_GROUP_STUDENT,
-//				groupNumber,
-//				studentId
-//		);
 		String sql = String.format(
 				Constants.SQL_INSERT_GROUP_STUDENT_TEST,
 				groupNumber,
@@ -231,19 +227,13 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveStudentAndGroupRelation[4]: sql: {}", sql);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveScheduleUnit(ScheduleUnit, TypeOfSchedule) saveScheduleUnit} method to store data about the schedule unit.
+	 */
 	@Override
 	public void saveScheduleUnit(ScheduleUnit scheduleUnit, TypeOfSchedule type) throws Exception {
-		log.debug("saveScheduleUnit[1]: save scheduleUnit: {}, type: {}", scheduleUnit, type);
+		log.info("saveScheduleUnit[1]: save scheduleUnit: {}, type: {}", scheduleUnit, type);
 		final String tableName = type.equals(TypeOfSchedule.MAIN) ? Constants.MAIN_SCHEDULE_UNITS_TABLE_NAME : Constants.RETAKE_SCHEDULE_UNITS_TABLE_NAME;
-//		String sql = generateInsertQuery(
-//				String.format(Constants.SQL_INSERT_SCHEDULE_UNIT, tableName),
-//				scheduleUnit.getScheduleUnitId(),
-//				scheduleUnit.getDateTime(),
-//				scheduleUnit.getLocation(),
-//				scheduleUnit.getSubjectId(),
-//				scheduleUnit.getPersonId(),
-//				scheduleUnit.getGroupNumber()
-//		);
 		String sql = String.format(
 				Constants.SQL_INSERT_SCHEDULE_UNIT_TEST,
 				tableName,
@@ -265,15 +255,12 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveScheduleUnit[2]: sql: {}", sql);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveSubject(Subject) saveSubject} method to store data about the subject.
+	 */
 	@Override
 	public void saveSubject(Subject subject) throws Exception {
-		log.debug("saveSubject[1]: save subject: {}", subject);
-//		String sql = generateInsertQuery(
-//				Constants.SQL_INSERT_SUBJECT,
-//				subject.getSubjectId(),
-//				subject.getSubjectName(),
-//				subject.getControlType()
-//		);
+		log.info("saveSubject[1]: save subject: {}", subject);
 		String sql = String.format(
 				Constants.SQL_INSERT_SUBJECT_TEST,
 				subject.getSubjectId(),
@@ -291,8 +278,11 @@ public class DataProviderPostgres implements IDataProvider{
 		log.debug("saveSubject[2]: sql: {}", sql);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveSchedule(Schedule) saveSchedule} method to store data about the schedule.
+	 */
 	public void saveSchedule(Schedule schedule) throws Exception {
-		log.debug("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
+		log.info("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
 		final String tableName = schedule.getTypeOfSchedule().equals(TypeOfSchedule.MAIN) ? Constants.MAIN_SCHEDULE_UNITS_TABLE_NAME : Constants.RETAKE_SCHEDULE_UNITS_TABLE_NAME;
 		try (Connection connection = getConnection();
 			Statement statement = connection.createStatement()
@@ -319,6 +309,14 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Saves a list of groups and their associated students to the database using batch processing.
+	 *
+	 * @param groups The list of Group objects to be saved to the database.
+	 *
+	 * @throws Exception    If an exception occurs during the saving process.
+	 *                      If an SQL exception occurs while executing the batch insert or establishing relationships.
+	 */
 	public void saveGroups(List<Group> groups) throws Exception {
 		log.debug("saveGroups[1]: save groups: {}", groups);
 
@@ -361,16 +359,17 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
-//	private <T> void saveEntities(List<T> entities, ThrowingConsumer<T, Exception> saveFunction) {
-//		entities.forEach(entity -> {
-//			try {
-//				saveFunction.accept(entity);
-//			} catch (Exception e) {
-//				throw new RuntimeException(e);
-//			}
-//		});
-//	}
-
+	/**
+	 * Saves a list of entities to the database using batch processing.
+	 *
+	 * @param entities       The list of entities to be saved to the database.
+	 * @param insertSqlFormat The SQL insert statement format with placeholders for entity values.
+	 * @param entityMapper   The mapper that transforms each entity into a set of values for the insert statement.
+	 * @param <T>            The type of entities being saved.
+	 *
+	 * @throws Exception    If an exception occurs during the saving process.
+	 *                      If an SQL exception occurs while executing the batch insert.
+	 */
 	public <T> void saveEntities(List<T> entities, String insertSqlFormat, EntityMapper<T> entityMapper) throws Exception {
 		log.debug("saveEntities[1]: saving entities: {}", entities);
 		try (Connection connection = getConnection();
@@ -388,14 +387,18 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteStudentById(String) deleteStudentById} method to remove the student with the given ID.
+	 */
 	@Override
 	public void deleteStudentById(String studentId) throws Exception {
-		log.debug("deleteStudentById[1]: delete student with id: {}", studentId);
+		log.info("deleteStudentById[1]: delete student with id: {}", studentId);
 		String sql = String.format(Constants.SQL_DELETE_ENTITY, Constants.STUDENT_TABLE_NAME, Constants.STUDENT_ID_FIELD, studentId);
 
 		try {
 			// Проверяем существование студента перед удалением
 			Student student = getStudentById(studentId);
+			log.debug("deleteStudentById[2]: student: {}", student);
 
 			// Если студент существует, выполняем удаление
 			try (Connection connection = getConnection();
@@ -408,11 +411,14 @@ public class DataProviderPostgres implements IDataProvider{
 				loggingObject.logObject(student, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
 			}
 		} catch (Exception e) {
-			log.error("deleteStudentById[2]: error: {}", e.getMessage());
+			log.error("deleteStudentById[3]: error: {}", e.getMessage());
 			throw new Exception("there is no student with this id");
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteTeacherById(String) deleteTeacherById} method to remove the teacher with the given ID.
+	 */
 	@Override
 	public void deleteTeacherById(String teacherId) throws Exception {
 		log.debug("deleteTeacherById[1]: delete teacher with id: {}", teacherId);
@@ -421,6 +427,7 @@ public class DataProviderPostgres implements IDataProvider{
 		try {
 			// Проверяем существование преподавателя перед удалением
 			Teacher teacher = getTeacherById(teacherId);
+			log.debug("deleteTeacherById[2]: teacher: {}", teacher);
 
 			// Если преподаватель существует, выполняем удаление
 			try (Connection connection = getConnection();
@@ -438,6 +445,9 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteGroupById(String) deleteGroupById} method to remove the group with the given ID.
+	 */
 	@Override
 	public void deleteGroupById(String groupId) throws Exception {
 		log.debug("deleteGroupById[1]: delete group with id: {}", groupId);
@@ -446,6 +456,7 @@ public class DataProviderPostgres implements IDataProvider{
 		try {
 			// Проверяем существование группы перед удалением
 			Group group = getGroupById(groupId);
+			log.debug("deleteGroupById[2]: group: {}", group);
 
 			// Если группа существует, выполняем удаление
 			try (Connection connection = getConnection();
@@ -463,6 +474,9 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteScheduleUnitById(String, TypeOfSchedule) deleteScheduleUnitById} method to remove the schedule unit with the given ID and type.
+	 */
 	@Override
 	public void deleteScheduleUnitById(String scheduleUnitId, TypeOfSchedule type) throws Exception {
 		log.debug("deleteScheduleUnitById[1]: delete scheduleUNit with id: {}", scheduleUnitId);
@@ -472,6 +486,7 @@ public class DataProviderPostgres implements IDataProvider{
 		try {
 			// Проверяем существование ячейки расписания перед удалением
 			ScheduleUnit scheduleUnit = getScheduleUnitById(scheduleUnitId, type);
+			log.debug("deleteScheduleUnitById[2]: schedule unit: {}", scheduleUnit);
 
 			// Если ячейка расписания существует, выполняем удаление
 			try (Connection connection = getConnection();
@@ -489,6 +504,9 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteSubjectById(String) deleteSubjectById} method to remove the subject with the given ID.
+	 */
 	@Override
 	public void deleteSubjectById(String subjectId) throws Exception {
 		log.debug("deleteSubjectById[1]: delete subject with id: {}", subjectId);
@@ -497,6 +515,7 @@ public class DataProviderPostgres implements IDataProvider{
 		try {
 			// Проверяем существование предмета перед удалением
 			Subject subject = getSubjectById(subjectId);
+			log.debug("deleteSubjectById[2]: subject: {}", subject);
 
 			// Если предмет существует, выполняем удаление
 			try (Connection connection = getConnection();
@@ -514,9 +533,12 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getStudentById(String) getStudentById} method to retrieve data about the student with the given ID.
+	 */
 	@Override
 	public Student getStudentById(String id) throws Exception {
-		log.debug("getStudentById[1]: get student with id: {}", id);
+		log.info("getStudentById[1]: get student with id: {}", id);
 		String sql = String.format(Constants.SQL_SELECT_BY_ID, Constants.STUDENT_TABLE_NAME, Constants.STUDENT_ID_FIELD, id);
 
 		try (Connection connection = getConnection();
@@ -526,16 +548,20 @@ public class DataProviderPostgres implements IDataProvider{
 			Student student = null;
 			if (resultSet.next()) {
 				student = mapResultSetToStudent(resultSet);
+				log.debug("getStudentById[2]: student: {}", student);
 			}
 
 			return Optional.ofNullable(student)
 					.orElseThrow(() -> {
-						log.error("getStudentById[2]: there is no student with this id");
+						log.error("getStudentById[3]: there is no student with this id");
 						return new Exception("there is no student with this id");
 					});
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getTeacherById(String) getTeacherById} method to retrieve data about the teacher with the given ID.
+	 */
 	@Override
 	public Teacher getTeacherById(String id) throws Exception {
 		log.debug("getTeacherById[1]: get teacher with id: {}", id);
@@ -548,6 +574,7 @@ public class DataProviderPostgres implements IDataProvider{
 			Teacher teacher = null;
 			if (resultSet.next()) {
 				teacher = mapResultSetToTeacher(resultSet);
+				log.debug("getTeacherById[2]: teacher: {}", teacher);
 			}
 
 			return Optional.ofNullable(teacher)
@@ -558,6 +585,9 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getGroupById(String) getGroupById} method to retrieve data about the group with the given ID.
+	 */
 	@Override
 	public Group getGroupById(String id) throws Exception {
 		log.debug("getGroupById[1]: get group with id: {}", id);
@@ -572,6 +602,7 @@ public class DataProviderPostgres implements IDataProvider{
 				group = mapResultSetToGroup(resultSet);
 				List<Student> students = getStudentsByGroup(group.getGroupNumber(), connection);
 				group.setStudents(students);
+				log.debug("getGroupById[2]: group: {}", group);
 			}
 
 			return Optional.ofNullable(group)
@@ -582,6 +613,14 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Retrieves a list of students belonging to a specified group based on the group number.
+	 *
+	 * @param groupNumber The group number for which to retrieve students.
+	 * @param connection The database connection to use for executing the SQL query.
+	 * @return A list of {@link Student} objects representing students in the specified group.
+	 * @see #getStudentById(String)
+	 */
 	private List<Student> getStudentsByGroup(String groupNumber, Connection connection) {
 		log.debug("getStudentsByGroup[1]: get students from group: {}", groupNumber);
 		String sql = String.format(Constants.SQL_SELECT_STUDENTS_ID_BY_GROUP, groupNumber);
@@ -602,6 +641,9 @@ public class DataProviderPostgres implements IDataProvider{
 		return students;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getScheduleUnitById(String, TypeOfSchedule) getScheduleUnitById} method to retrieve data about the schedule unit with the given ID and type.
+	 */
 	@Override
 	public ScheduleUnit getScheduleUnitById(String id, TypeOfSchedule type) throws Exception {
 		log.debug("getScheduleUnitById[1]: get scheduleUnit with id: {}", id);
@@ -615,6 +657,7 @@ public class DataProviderPostgres implements IDataProvider{
 			ScheduleUnit scheduleUnit = null;
 			if (resultSet.next()) {
 				scheduleUnit = mapResultSetToScheduleUnit(resultSet);
+				log.debug("getScheduleUnitById[2]: schedule unit: {}", scheduleUnit);
 			}
 
 			return Optional.ofNullable(scheduleUnit)
@@ -625,6 +668,9 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getSubjectById(String) getSubjectById} method to retrieve data about the subject with the given ID.
+	 */
 	@Override
 	public Subject getSubjectById(String id) throws Exception {
 		log.debug("getSubjectById[1]: get subject with id: {}", id);
@@ -637,6 +683,7 @@ public class DataProviderPostgres implements IDataProvider{
 			Subject subject = null;
 			if (resultSet.next()) {
 				subject = mapResultSetToSubject(resultSet);
+				log.debug("getSubjectById[2]: subject: {}", subject);
 			}
 
 			return Optional.ofNullable(subject)
@@ -647,6 +694,9 @@ public class DataProviderPostgres implements IDataProvider{
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllStudents() getAllStudents} method to get a list of all students in the system.
+	 */
 	@Override
 	public List<Student> getAllStudents() {
 		log.debug("getAllStudents[1]: get all records from students table");
@@ -667,6 +717,9 @@ public class DataProviderPostgres implements IDataProvider{
 		return students;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllTeachers() getAllTeachers} method to get a list of all teachers in the system.
+	 */
 	@Override
 	public List<Teacher> getAllTeachers() {
 		log.debug("getAllTeachers[1]: get all records from teachers table");
@@ -687,6 +740,9 @@ public class DataProviderPostgres implements IDataProvider{
 		return teachers;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllGroups() getAllGroups} method to get a list of all groups in the system.
+	 */
 	@Override
 	public List<Group> getAllGroups() {
 		log.debug("getAllGroups[1]: get all records from groups table");
@@ -710,6 +766,9 @@ public class DataProviderPostgres implements IDataProvider{
 		return groups;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllScheduleUnits(TypeOfSchedule) getAllScheduleUnits} method to get a list of all schedule units of the specified type in the system.
+	 */
 	@Override
 	public List<ScheduleUnit> getAllScheduleUnits(TypeOfSchedule type) {
 		log.debug("getAllTeachers[1]: get all records from teachers table");
@@ -731,6 +790,9 @@ public class DataProviderPostgres implements IDataProvider{
 		return scheduleUnits;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllSubjects() getAllSubjects} method to get a list of all subjects in the system.
+	 */
 	@Override
 	public List<Subject> getAllSubjects() {
 		log.debug("getAllSubjects[1]: get all records from subjects table");
@@ -751,9 +813,12 @@ public class DataProviderPostgres implements IDataProvider{
 		return subjects;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#dataTransform(String)} () dataTransform} method to transform data from excel to other format.
+	 */
 	@Override
 	public void dataTransform(String sourceFilePath) throws Exception {
-		log.debug("dataTransform[1]: transform data from file: {}", sourceFilePath);
+		log.info("dataTransform[1]: transform data from file: {}", sourceFilePath);
 		List<ExcelRow> excelRows = dataLoading(sourceFilePath);
 
 		List<Student> students = convertToStudents(excelRows);
@@ -778,11 +843,6 @@ public class DataProviderPostgres implements IDataProvider{
 			log.error("dataTransform[2]: Errors were detected during data validation: {}", resultsOfValidation);
 			throw new Exception("Errors were detected during data validation");
 		}
-
-//		saveEntities(students, this::saveStudent);
-//		saveEntities(teachers, this::saveTeacher);
-//		saveEntities(groups, this::saveGroup);
-//		saveEntities(subjects, this::saveSubject);
 
 		saveEntities(students, Constants.SQL_INSERT_STUDENT_TEST, new StudentEntityMapper());
 		saveEntities(teachers, Constants.SQL_INSERT_TEACHER_TEST, new TeacherEntityMapper());

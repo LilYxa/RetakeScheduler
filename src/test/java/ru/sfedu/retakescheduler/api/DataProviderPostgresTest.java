@@ -15,38 +15,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.getProperty;
-import static ru.sfedu.retakescheduler.utils.XmlUtil.saveRecords;
+import static ru.sfedu.retakescheduler.utils.ScheduleUtil.createTestSchedule;
 
 public class DataProviderPostgresTest extends BaseTest {
-	Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "53b51af6-04df-4af5-8bdb-499436bc575a", 77.5);
-	Student student2 = new Student("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "8bccaa52-ef8c-4b1a-879f-10c6dfea861d", 94.6);
-	final Student student3 = new Student("Sidorov", "Sidor", "Sidorovich","sidorov@mail.ru", "1e1d663e-29d4-4599-a2a2-18723e47f560", 88.8);
-	Teacher teacher = new Teacher("Васильев", "Иван", "Николаевич", "vasiliev@mail.ru", "teach1", LocalDate.now());
-	Teacher teacher2 = new Teacher("Васильев", "Вася", "Николаевич", "vasi@mail.ru", "teach2", LocalDate.now());
-	Teacher teacher3 = new Teacher("Васил", "Иван", "Николаевич", "va@mail.ru", "teach3", LocalDate.now());
-	Teacher teacherForSchedule = new Teacher("Doe", "John", "Johnovich", "john@mail.ru", "4e61290b-c004-491e-8c7a-ee194711ee47", LocalDate.now());
-	Group group = new Group("22ВТ-12.03.01.01-о1", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student3, student1, student2)));
-	Group group2 = new Group("22ВТ-12.03.01.01-о2", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student3, student1, student2)));
-	Group group3 = new Group("22ВТ-12.03.01.01-о3", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student3, student1, student2)));
-	Subject subject = new Subject("q2dw1", "Математика", "Экзамен");
-	Subject subject2 = new Subject("q2dw1fddxfd", "Физика", "Экзамен");
-	Subject subject3 = new Subject("q2dw1kjb", "История", "Экзамен");
-	Subject testSubjectForSchedule = new Subject("1wfwef-hbehdh-qwwqq-dw1sqs","Test Subject", "Test Type");
-
-	ScheduleUnit scheduleUnit = new ScheduleUnit("jknkjwndkcjnwkdjcn", LocalDateTime.of(2023, 12, 12, 12, 12), "q2dw1", "location", "teach1", "22ВТ-12.03.01.01-о1");
-	ScheduleUnit scheduleUnit2 = new ScheduleUnit("jknkjwndk", LocalDateTime.of(2023, 12, 14, 12, 12), "q2dw1fddxfd", "location", "teach2", "22ВТ-12.03.01.01-о2");
-	ScheduleUnit scheduleUnit3 = new ScheduleUnit("okwokdmwok", LocalDateTime.of(2023, 12, 11, 12, 12), "q2dw1kjb", "location", "teach3", "22ВТ-12.03.01.01-о3");
-
 	private static final Logger log = LogManager.getLogger(DataProviderPostgresTest.class);
 	private static DataProviderPostgres dataProviderPostgres = new DataProviderPostgres();
 
@@ -86,7 +64,6 @@ public class DataProviderPostgresTest extends BaseTest {
 				getProperty(Constants.POSTGRES_DB_USER),
 				getProperty(Constants.POSTGRES_DB_PASSWORD));
 	}
-
 
 	@Test
 	public void testSaveStudentPositive() throws Exception {
@@ -210,6 +187,31 @@ public class DataProviderPostgresTest extends BaseTest {
 			dataProviderPostgres.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		});
 		assertEquals("error during inserting scheduleUnit", exception.getMessage());
+	}
+
+	@Test
+	public void testSaveSchedulePositive() throws Exception {
+		log.debug("testSaveSchedulePositive[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN, List.of(scheduleUnit, scheduleUnit2));
+		dataProviderPostgres.saveSubject(subject);
+		dataProviderPostgres.saveSubject(subject2);
+		dataProviderPostgres.saveTeacher(teacher);
+		dataProviderPostgres.saveTeacher(teacher2);
+		dataProviderPostgres.saveGroup(group);
+		dataProviderPostgres.saveGroup(group2);
+		log.debug("testSaveSchedulePositive[2]: schedule: {}", schedule);
+		dataProviderPostgres.saveSchedule(schedule);
+		assertNotNull(dataProviderPostgres.getAllScheduleUnits(TypeOfSchedule.MAIN));
+	}
+
+	@Test
+	public void testSaveScheduleEmpty() throws Exception {
+		log.debug("testSaveScheduleEmpty[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN);
+		log.debug("testSaveScheduleEmpty[2]: schedule: {}", schedule);
+		assertThrows(NullPointerException.class, () -> {
+			dataProviderPostgres.saveSchedule(schedule);
+		});
 	}
 
 	@Test
@@ -592,6 +594,15 @@ public class DataProviderPostgresTest extends BaseTest {
 	}
 
 	@Test
+	public void testDataTransformNegative() {
+		log.debug("testDataTransformNegative[1]: start test");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderPostgres.dataTransform("a non-existent path");
+		});
+		assertEquals("there is no file", exception.getMessage());
+	}
+
+	@Test
 	public void testSaveSchedule() throws Exception {
 		log.debug("testSaveSchedule[1]: start test");
 		List<ScheduleUnit> scheduleUnits = List.of(scheduleUnit, scheduleUnit2);
@@ -634,16 +645,73 @@ public class DataProviderPostgresTest extends BaseTest {
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
 		File file = files.get(0);
 		dataProviderPostgres.dataTransform(file.getPath());
-		dataProviderPostgres.saveSubject(testSubjectForSchedule);
-		dataProviderPostgres.saveTeacher(teacherForSchedule);
+//		dataProviderPostgres.saveSubject(testSubjectForSchedule);
+//		dataProviderPostgres.saveTeacher(teacherForSchedule);
 		Schedule mainSchedule = createTestSchedule(dataProviderPostgres);
 		LocalDate startDate = LocalDate.of(2023, 11, 27);
 		LocalDate endDate = LocalDate.of(2023, 12, 15);
 
-		Schedule result = dataProviderPostgres.createSchedule(mainSchedule, startDate, endDate, true, false);
+		Schedule result = dataProviderPostgres.createSchedule(mainSchedule, startDate, endDate, false, false);
 		dataProviderPostgres.saveSchedule(result);
 		assertNotNull(result);
 		assertNotNull(result.getUnits());
 		log.debug("testCreateSchedule[2]: created schedule: {}", result);
+	}
+
+	@Test
+	public void testCreateScheduleEmptyMainSchedule() throws Exception {
+		log.debug("testCreateScheduleEmptyMainSchedule[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		dataProviderPostgres.dataTransform(file.getPath());
+		Schedule main = new Schedule(TypeOfSchedule.MAIN);
+		LocalDate startDate = LocalDate.of(2023, 11, 27);
+		LocalDate endDate = LocalDate.of(2023, 12, 15);
+		Exception exception = assertThrows(NullPointerException.class, () -> {
+			Schedule retake = dataProviderPostgres.createSchedule(main, startDate, endDate, false, false);
+		});
+	}
+
+	@Test
+	public void testDataLoadingPositive() throws Exception {
+		log.debug("testDataLoadingPositive[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		List<ExcelRow> result = dataProviderPostgres.dataLoading(file.getPath());
+		log.debug("testDataLoadingPositive[2]: list after loading: {}", result);
+		assertNotNull(result);
+		assertFalse(result.isEmpty());
+	}
+
+	@Test
+	public void testCheckEntityExistenceIfExist() throws Exception {
+		log.debug("testCheckEntityExistenceIfExist[1]: start test");
+		List<Student> students = List.of(student1, student2, student3);
+		log.debug("testCheckEntityExistenceIfExist[1]: students: {}, searched student: {}", students, student1);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderPostgres.checkIfEntityExist(students, student1, "this student already exist");
+		});
+		assertEquals("this student already exist", exception.getMessage());
+	}
+
+	@Test
+	public void testCheckEntityExistenceIfNotExist() throws Exception {
+		log.debug("testCheckEntityExistenceIfNotExist[1]: start test");
+		List<Student> students = List.of(student2, student3);
+		log.debug("testCheckEntityExistenceIfNotExist[1]: students: {}, searched student: {}", students, student1);
+		try {
+			dataProviderPostgres.checkIfEntityExist(students, student1, "this student already exist");
+		} catch (Exception e) {
+			fail();
+		}
+	}
+
+	@Test
+	public void testDataLoadingNegative() {
+		log.debug("testDataLoadingNegative[1]: start test");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderPostgres.dataLoading("non-existing file");
+		});
+		assertEquals("there is no file", exception.getMessage());
 	}
 }

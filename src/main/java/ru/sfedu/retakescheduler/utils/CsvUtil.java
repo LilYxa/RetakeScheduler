@@ -46,8 +46,9 @@ public class CsvUtil {
 					.withMappingStrategy(mappingStrategy)
 					.build();
 			beanToCsv.write(object);
+			log.info("save[2]: object {} were saved: {}", object.getClass().getSimpleName(), object);
 		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-			log.error("save[2]: error: {}", e.getMessage());
+			log.error("save[3]: error: {}", e.getMessage());
 		}
 	}
 

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static ru.sfedu.retakescheduler.utils.ScheduleUtil.createTestSchedule;
 import static ru.sfedu.retakescheduler.utils.XmlUtil.*;
 import static ru.sfedu.retakescheduler.utils.FileUtil.deleteFileOrFolder;
 
@@ -30,23 +31,6 @@ public class DataProviderXmlTest extends BaseTest {
 	private static DataProviderXml dataProviderXml1;
 	private static DataProviderXml dataProviderXml2;
 	private static String testPath;
-
-	Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "53b51af6-04df-4af5-8bdb-499436bc575a", 77.5);
-	Student student2 = new Student("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "8bccaa52-ef8c-4b1a-879f-10c6dfea861d", 94.6);
-	final Student student3 = new Student("Sidorov", "Sidor", "Sidorovich","sidorov@mail.ru", "1e1d663e-29d4-4599-a2a2-18723e47f560", 88.8);
-	Teacher teacher = new Teacher("Васильев", "Иван", "Николаевич", "vasiliev@mail.ru", "teach1", LocalDate.now());
-	Teacher teacher2 = new Teacher("Васильев", "Вася", "Николаевич", "vasi@mail.ru", "teach2", LocalDate.now());
-	Teacher teacher3 = new Teacher("Васил", "Иван", "Николаевич", "va@mail.ru", "teach3", LocalDate.now());
-	Group group = new Group("22ВТ-12.03.01.01-о1", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Group group2 = new Group("22ВТ-12.03.01.01-о2", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Group group3 = new Group("22ВТ-12.03.01.01-о3", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Subject subject = new Subject("q2dw1", "Математика", "Экзамен");
-	Subject subject2 = new Subject("q2dw1fddxfd", "Физика", "Экзамен");
-	Subject subject3 = new Subject("q2dw1kjb", "История", "Экзамен");
-
-	ScheduleUnit scheduleUnit = new ScheduleUnit("jknkjwndkcjnwkdjcn", LocalDateTime.of(2023, 12, 12, 12, 12), "subjectId", "location", "personId", "groupId");
-	ScheduleUnit scheduleUnit2 = new ScheduleUnit("jknkjwndk", LocalDateTime.of(2023, 12, 14, 12, 12), "subjectId", "location", "personId", "groupId");
-	ScheduleUnit scheduleUnit3 = new ScheduleUnit("okwokdmwok", LocalDateTime.of(2023, 12, 11, 12, 12), "subjectId", "location", "personId", "groupId");
 	private static final Logger log = LogManager.getLogger(DataProviderXmlTest.class);
 
 	@BeforeEach
@@ -205,6 +189,25 @@ public class DataProviderXmlTest extends BaseTest {
 			dataProviderXml2.saveSubject(subject);
 		});
 		assertEquals("this subject already exists", exception.getMessage());
+	}
+
+	@Test
+	public void testSaveSchedulePositive() throws Exception {
+		log.debug("testSaveSchedulePositive[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN, List.of(scheduleUnit, scheduleUnit2, scheduleUnit3));
+		log.debug("testSaveSchedulePositive[2]: schedule: {}", schedule);
+		dataProviderXml2.saveSchedule(schedule);
+		assertNotNull(dataProviderXml2.getAllScheduleUnits(TypeOfSchedule.MAIN));
+	}
+
+	@Test
+	public void testSaveScheduleEmpty() throws Exception {
+		log.debug("testSaveScheduleEmpty[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN);
+		log.debug("testSaveScheduleEmpty[2]: schedule: {}", schedule);
+		assertThrows(NullPointerException.class, () -> {
+			dataProviderXml2.saveSchedule(schedule);
+		});
 	}
 
 	@Test
@@ -465,6 +468,15 @@ public class DataProviderXmlTest extends BaseTest {
 	}
 
 	@Test
+	public void testDataTransformNegative() {
+		log.debug("testDataTransformNegative[1]: start test");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderXml2.dataTransform("a non-existent path");
+		});
+		assertEquals("there is no file", exception.getMessage());
+	}
+
+	@Test
 	public void testCreateMainSchedule() throws Exception {
 		log.debug("createTestSchedule[1]: start test");
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
@@ -493,6 +505,63 @@ public class DataProviderXmlTest extends BaseTest {
 		dataProviderXml2.saveSchedule(result);
 		assertNotNull(result);
 		log.debug("testCreateSchedule[2]: created schedule: {}", result);
+	}
+
+	@Test
+	public void testCreateScheduleEmptyMainSchedule() throws Exception {
+		log.debug("testCreateScheduleEmptyMainSchedule[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		dataProviderXml2.dataTransform(file.getPath());
+		Schedule main = new Schedule(TypeOfSchedule.MAIN);
+		LocalDate startDate = LocalDate.of(2023, 11, 27);
+		LocalDate endDate = LocalDate.of(2023, 12, 15);
+		Exception exception = assertThrows(NullPointerException.class, () -> {
+			Schedule retake = dataProviderXml2.createSchedule(main, startDate, endDate, false, false);
+		});
+	}
+
+	@Test
+	public void testDataLoadingPositive() throws Exception {
+		log.debug("testDataLoadingPositive[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		List<ExcelRow> result = dataProviderXml2.dataLoading(file.getPath());
+		log.debug("testDataLoadingPositive[2]: list after loading: {}", result);
+		assertNotNull(result);
+		assertFalse(result.isEmpty());
+	}
+
+	@Test
+	public void testDataLoadingNegative() {
+		log.debug("testDataLoadingNegative[1]: start test");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderXml2.dataLoading("non-existing file");
+		});
+		assertEquals("there is no file", exception.getMessage());
+	}
+
+	@Test
+	public void testCheckEntityExistenceIfExist() throws Exception {
+		log.debug("testCheckEntityExistenceIfExist[1]: start test");
+		List<Student> students = List.of(student1, student2, student3);
+		log.debug("testCheckEntityExistenceIfExist[1]: students: {}, searched student: {}", students, student1);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderXml2.checkIfEntityExist(students, student1, "this student already exist");
+		});
+		assertEquals("this student already exist", exception.getMessage());
+	}
+
+	@Test
+	public void testCheckEntityExistenceIfNotExist() throws Exception {
+		log.debug("testCheckEntityExistenceIfNotExist[1]: start test");
+		List<Student> students = List.of(student2, student3);
+		log.debug("testCheckEntityExistenceIfNotExist[1]: students: {}, searched student: {}", students, student1);
+		try {
+			dataProviderXml2.checkIfEntityExist(students, student1, "this student already exist");
+		} catch (Exception e) {
+			fail();
+		}
 	}
 
 	@Test

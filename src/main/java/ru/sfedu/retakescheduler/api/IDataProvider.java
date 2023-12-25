@@ -23,15 +23,15 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * @author Elland Ilia
  */
 public interface IDataProvider {
-	static final Logger log = LogManager.getLogger(DataProviderCsv.class);
+	static final Logger log = LogManager.getLogger(IDataProvider.class);
 
 	/**
 	 * Saves information about a student in the system.
@@ -62,6 +62,17 @@ public interface IDataProvider {
 	 * @throws Exception If an error occurs during the saving process. If such a schedule unit already exists.
 	 */
 	void saveScheduleUnit(ScheduleUnit scheduleUnit, TypeOfSchedule type) throws Exception;
+
+	/**
+	 * Saves the schedule to the data storage.
+	 *
+	 * @param schedule The schedule to be saved.
+	 * @throws Exception If an error occurs during the process of saving the schedule.
+	 *                   Possible reasons may include issues with accessing the storage
+	 *                   or other errors during the saving process.
+	 */
+	void saveSchedule(Schedule schedule) throws Exception;
+
 	/**
 	 * Saves information about a subject in the system.
 	 *
@@ -199,8 +210,9 @@ public interface IDataProvider {
 	 * @param exportToExcel A flag indicating whether to export to Excel.
 	 * @param sendEmail A flag indicating whether to send emails.
 	 * @return An object of type Schedule representing the created schedule.
+	 * @throws Exception If an error occurs during the schedule generation, exporting to Excel, or sending an email.
 	 */
-	default Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) {
+	default Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) throws Exception {
 		log.debug("createSchedule[1]: scheduling retakes from {} to {}", startDate, endDate);
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
 		File file = files.get(0);
@@ -222,12 +234,16 @@ public interface IDataProvider {
 		// Продолжительность урока (в минутах)
 		int lessonDuration = Constants.LESSON_DURATION;
 
-		for (LocalDateTime currentDate = startDateTime; currentDate.isBefore(endDateTime); currentDate = currentDate.plusDays(1)) {
+		for (LocalDateTime currentDate = startDateTime; !currentDate.isAfter(endDateTime); currentDate = currentDate.plusDays(1)) {
 			if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
 				for (Subject subject : subjects) {
 					if (LocalTime.of(currentDate.getHour(), currentDate.getMinute()).isAfter(LocalTime.of(17, 50))) {
 						currentDate = currentDate.plusDays(1);
-						currentDate = currentDate.withHour(8).withMinute(0);
+						if (currentDate.isBefore(endDateTime)) {
+							currentDate = currentDate.withHour(8).withMinute(0);
+						} else {
+							break; // Выход из цикла, если достигнута дата конца
+						}
 					}
 
 					Group group = findGroupByDiscipline(excelRows, groups, subject);
@@ -263,7 +279,7 @@ public interface IDataProvider {
 
 		if (exportToExcel) {
 			try {
-				exportInExcelFormat(retakeSchedule, Constants.OUTPUT_FOLDER_PATH.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE));
+				exportInExcelFormat(retakeSchedule);
 			} catch (Exception e) {
 				log.error("createSchedule[2]: error: {}", e.getMessage());
 			}
@@ -323,14 +339,16 @@ public interface IDataProvider {
 	 * @param filePath The path to the Excel file from which data will be loaded.
 	 * @return A list of ExcelRow objects representing the data from the Excel file.
 	 *         An empty list is returned if there is an error during data loading.
+	 * @throws Exception If there is no file at the specified path or an error occurs during data loading.
 	 */
-	default List<ExcelRow> dataLoading(String filePath) {
+	default List<ExcelRow> dataLoading(String filePath) throws Exception {
 		List<ExcelRow> excelRows = new ArrayList<>();
 		log.debug("dataLoading[1]: data loading from file: {}", filePath);
 		try {
 			excelRows = ExcelUtil.readFromExcel(filePath);
 		} catch (IOException e) {
 			log.error("dataLoading[2]: error: {}", e.getMessage());
+			throw new Exception("there is no file");
 		}
 		return excelRows;
 	}
@@ -397,7 +415,6 @@ public interface IDataProvider {
 	 * Exports the retake schedule to an Excel file.
 	 *
 	 * @param schedule    The schedule containing retake information to be exported.
-	 * @param pathToFile  The path to the Excel file where the schedule will be saved.
 	 * @throws Exception  If an error occurs during the export process.
 	 *
 	 * <p>
@@ -406,8 +423,8 @@ public interface IDataProvider {
 	 * The workbook is then saved to the specified file path.
 	 * </p>
 	 */
-	private void exportInExcelFormat(Schedule schedule, String pathToFile) throws Exception {
-		log.debug("exportInExcelFormat[1]: export schedule to file: {}", pathToFile);
+	private void exportInExcelFormat(Schedule schedule) throws Exception {
+		log.debug("exportInExcelFormat[1]: export schedule to file: {}", Constants.OUTPUT_FOLDER_PATH.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE));
 		FileUtil.createFolderIfNotExists(Constants.OUTPUT_FOLDER_PATH);
 		List<ScheduleUnit> scheduleUnits = schedule.getUnits();
 		try (Workbook workbook = new XSSFWorkbook()) {
@@ -436,7 +453,7 @@ public interface IDataProvider {
 				row.createCell(4).setCellValue(teacherFullname);
 			}
 
-			try (FileOutputStream fileOutputStream = new FileOutputStream(pathToFile)) {
+			try (FileOutputStream fileOutputStream = new FileOutputStream(Constants.OUTPUT_FOLDER_PATH.concat(Constants.EXCEL_RETAKE_SCHEDULE_FILE))) {
 				workbook.write(fileOutputStream);
 				log.debug("exportInExcelFormat[2]: export completed successfully");
 			}

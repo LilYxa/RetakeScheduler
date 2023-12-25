@@ -239,7 +239,6 @@ public class Constants {
 	public static final String CLI_ARGS_NAME_DELETE_RECORD = "entity_type entity_id";
 	public static final String CLI_ARGS_NAME_DELETE_SCHEDULE_UNIT = "type schedule_unit_id";
 	public static final String CLI_ARGS_NAME_DATA_TRANSFORM = "path_to_file";
-	public static final String CLI_ARGS_NAME_CREATE_MAIN_SCHEDULE = "data_provider";
 	public static final String CLI_ARGS_NAME_CREATE_RETAKE_SCHEDULE = "start_date end_date export_to_excel send_email";
 	public static final String CLI_ARGS_LAST_NAME = "last_name";
 	public static final String CLI_ARGS_FIRST_NAME = "first_name";

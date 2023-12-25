@@ -66,6 +66,9 @@ public class DataProviderCsv implements IDataProvider {
 		createFileIfNotExists(retakeScheduleUnitsFile);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveStudent(Student) saveStudent} method to store data about the student.
+	 */
 	@Override
 	public void saveStudent(Student student) throws Exception{
 		log.debug("saveStudent[1]: save Student: {}", student);
@@ -74,8 +77,12 @@ public class DataProviderCsv implements IDataProvider {
 		checkIfEntityExist(students, student, "this student already exists");
 		students.add(student);
 		save(student, studentsFile, Student.class, getObjectFields(student));
+		log.info("saveStudent[2]: save student: {}", student);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveTeacher(Teacher) saveTeacher} method to store data about the teacher.
+	 */
 	@Override
 	public void saveTeacher(Teacher teacher) throws Exception {
 		log.debug("saveTeacher[1]: save Teacher: {}", teacher);
@@ -84,8 +91,12 @@ public class DataProviderCsv implements IDataProvider {
 		checkIfEntityExist(teachers, teacher, "this teacher already exists");
 		teachers.add(teacher);
 		save(teacher, teachersFile, Teacher.class, getObjectFields(teacher));
+		log.info("saveTeacher[2]: save teacher: {}", teacher);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveGroup(Group) saveGroup} method to store data about the group.
+	 */
 	@Override
 	public void saveGroup(Group group) throws Exception {
 		log.debug("saveGroup[1]: save Group: {}", group);
@@ -103,11 +114,15 @@ public class DataProviderCsv implements IDataProvider {
 							student.getStudentId()
 					})
 					.forEach(csvWriter::writeNext);
+			log.info("saveGroup[2]: save group: {}", group);
 		} catch (IOException e) {
 			log.error("saveGroup[3]: error: {}", e.getMessage());
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllGroups() getAllGroups} method to get a list of all groups in the system.
+	 */
 	public List<Group> getAllGroups() {
 		try (Reader reader = new FileReader(groupsFile);
 		     CSVReader csvReader = new CSVReader(reader)) {
@@ -147,6 +162,9 @@ public class DataProviderCsv implements IDataProvider {
 		return Collections.emptyList();
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveScheduleUnit(ScheduleUnit, TypeOfSchedule) saveScheduleUnit} method to store data about the schedule unit.
+	 */
 	@Override
 	public void saveScheduleUnit(ScheduleUnit scheduleUnit, TypeOfSchedule type) throws Exception {
 		log.debug("saveScheduleUnit[1]: save ScheduleUnit: {}", scheduleUnit);
@@ -156,14 +174,21 @@ public class DataProviderCsv implements IDataProvider {
 		checkIfEntityExist(scheduleUnits, scheduleUnit, "this scheduleUnit already exists");
 		scheduleUnits.add(scheduleUnit);
 		save(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class, getObjectFields(scheduleUnit));
+		log.info("saveScheduleUnit[2]: save schedule unit: {}", scheduleUnit);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveSchedule(Schedule) saveSchedule} method to store data about the schedule.
+	 */
 	public void saveSchedule(Schedule schedule) {
 		log.debug("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
 		String scheduleUnitsFile = schedule.getTypeOfSchedule().equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
 		saveRecords(schedule.getUnits(), scheduleUnitsFile, ScheduleUnit.class, getObjectFields(new ScheduleUnit()));
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#saveSubject(Subject) saveSubject} method to store data about the subject.
+	 */
 	@Override
 	public void saveSubject(Subject subject) throws Exception {
 		log.debug("saveSubject[1]: save Subject: {}", subject);
@@ -172,10 +197,14 @@ public class DataProviderCsv implements IDataProvider {
 		checkIfEntityExist(subjects, subject, "this subject already exists");
 		subjects.add(subject);
 		save(subject, subjectsFile, Subject.class, getObjectFields(subject));
+		log.info("saveSubject[2]: save subject: {}", subject);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteStudentById(String) deleteStudentById} method to remove the student with the given ID.
+	 */
 	public void deleteStudentById(String studentId) throws Exception {
-		log.debug("deleteStudentById[1]: studentId = {}", studentId);
+		log.info("deleteStudentById[1]: studentId = {}", studentId);
 		List<Student> students = getAllStudents();
 		Student searchedStudent = new Student();
 		try {
@@ -191,7 +220,7 @@ public class DataProviderCsv implements IDataProvider {
 		loggingObject.logObject(searchedStudent, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
 
 		boolean removeResult = students.remove(searchedStudent);
-		log.debug("deleteStudentById[4]: deletion result: {}", removeResult);
+		log.info("deleteStudentById[4]: deletion result: {}", removeResult);
 
 		File oldFile = new File(studentsFile);
 		File newFile = new File(studentsFile);
@@ -203,8 +232,11 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("deleteStudentById[6]: new file {} was created", newFile.getName());
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteTeacherById(String) deleteTeacherById} method to remove the teacher with the given ID.
+	 */
 	public void deleteTeacherById(String teacherId) throws Exception {
-		log.debug("deleteTeacherById[1]: teacherId = {}", teacherId);
+		log.info("deleteTeacherById[1]: teacherId = {}", teacherId);
 		List<Teacher> teachers = getAllTeachers();
 		Teacher searchedTeacher = new Teacher();
 		try {
@@ -220,7 +252,7 @@ public class DataProviderCsv implements IDataProvider {
 		loggingObject.logObject(searchedTeacher, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
 
 		boolean removeResult = teachers.remove(searchedTeacher);
-		log.debug("deleteTeacherById[4]: deletion result: {}", removeResult);
+		log.info("deleteTeacherById[4]: deletion result: {}", removeResult);
 
 		File oldFile = new File(teachersFile);
 		File newFile = new File(teachersFile);
@@ -232,9 +264,12 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("deleteTeacherById[6]: new file {} was created", newFile.getName());
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteGroupById(String) deleteGroupById} method to remove the group with the given ID.
+	 */
 	@Override
 	public void deleteGroupById(String groupId) throws Exception {
-		log.debug("deleteGroupByGroupId[1]: groupNumber = {}", groupId);
+		log.info("deleteGroupByGroupId[1]: groupNumber = {}", groupId);
 		List<Group> groups = getAllGroups();
 		Group searchedGroup;
 		try {
@@ -250,7 +285,7 @@ public class DataProviderCsv implements IDataProvider {
 		loggingObject.logObject(searchedGroup, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
 
 		boolean removeResult = groups.remove(searchedGroup);
-		log.debug("deleteGroupByGroupNumber[4]: deletion result: {}", removeResult);
+		log.info("deleteGroupByGroupNumber[4]: deletion result: {}", removeResult);
 
 		File oldFile = new File(groupsFile);
 		File newFile = new File(groupsFile);
@@ -262,9 +297,12 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("deleteGroupByGroupNumber[6]: new file {} was created", newFile.getName());
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteScheduleUnitById(String, TypeOfSchedule) deleteScheduleUnitById} method to remove the schedule unit with the given ID and type.
+	 */
 	@Override
 	public void deleteScheduleUnitById(String scheduleUnitId, TypeOfSchedule type) throws Exception {
-		log.debug("deleteScheduleUnitById[1]: scheduleUnitId = {}", scheduleUnitId);
+		log.info("deleteScheduleUnitById[1]: scheduleUnitId = {}", scheduleUnitId);
 		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
 		List<ScheduleUnit> scheduleUnits = getAllScheduleUnits(type);
 		ScheduleUnit searchedScheduleUnit;
@@ -281,7 +319,7 @@ public class DataProviderCsv implements IDataProvider {
 		loggingObject.logObject(searchedScheduleUnit, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
 
 		boolean removeResult = scheduleUnits.remove(searchedScheduleUnit);
-		log.debug("deleteScheduleUnitById[4]: deletion result: {}", removeResult);
+		log.info("deleteScheduleUnitById[4]: deletion result: {}", removeResult);
 
 		File oldFile = new File(scheduleUnitsFile);
 		File newFile = new File(scheduleUnitsFile);
@@ -293,9 +331,12 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("deleteScheduleUnitById[6]: new file {} was created", newFile.getName());
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#deleteSubjectById(String) deleteSubjectById} method to remove the subject with the given ID.
+	 */
 	@Override
 	public void deleteSubjectById(String subjectId) throws Exception {
-		log.debug("deleteSubjectById[1]: subjectId = {}", subjectId);
+		log.info("deleteSubjectById[1]: subjectId = {}", subjectId);
 		List<Subject> subjects = getAllSubjects();
 		Subject searchedSubject;
 		try {
@@ -311,7 +352,7 @@ public class DataProviderCsv implements IDataProvider {
 		loggingObject.logObject(searchedSubject, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
 
 		boolean removeResult = subjects.remove(searchedSubject);
-		log.debug("deleteSubjectById[4]: deletion result: {}", removeResult);
+		log.info("deleteSubjectById[4]: deletion result: {}", removeResult);
 
 		File oldFile = new File(subjectsFile);
 		File newFile = new File(subjectsFile);
@@ -323,6 +364,16 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("deleteSubjectById[6]: new file {} was created", newFile.getName());
 	}
 
+	/**
+	 * Deletes a specified object from a file and updates the file with the remaining objects.
+	 *
+	 * This method deletes the provided object from the specified file, updates the file with the remaining objects,
+	 * and logs relevant information such as the object type, deletion status, and file operations.
+	 *
+	 * @param object     The object to be deleted from the file.
+	 * @param filePath   The path to the file containing the objects.
+	 * @param <T>        The type of the object.
+	 */
 	public <T> void deleteObject(T object, String filePath) {
 		log.debug("deleteObject[1]: object type: {}, object: {}", object.getClass().getSimpleName(), object);
 		loggingObject.logObject(object, Thread.currentThread().getStackTrace()[1].getMethodName(), Status.SUCCESS);
@@ -356,6 +407,9 @@ public class DataProviderCsv implements IDataProvider {
 		return result;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getStudentById(String) getStudentById} method to retrieve data about the student with the given ID.
+	 */
 	@Override
 	public Student getStudentById(String id) throws Exception {
 		log.debug("getStudentById[1]: id = {}", id);
@@ -370,9 +424,13 @@ public class DataProviderCsv implements IDataProvider {
 			log.error("getStudentById[2]: error: {}", e.getMessage());
 			throw new Exception("there is no student with this id");
 		}
+		log.info("getStudentById[3]: searched student: {}", searchedStudent);
 		return searchedStudent;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getTeacherById(String) getTeacherById} method to retrieve data about the teacher with the given ID.
+	 */
 	@Override
 	public Teacher getTeacherById(String id) throws Exception {
 		log.debug("getTeacherById[1]: id = {}", id);
@@ -387,9 +445,13 @@ public class DataProviderCsv implements IDataProvider {
 			log.error("getTeacherById[2]: error: {}", e.getMessage());
 			throw new Exception("there is no teacher with this id");
 		}
+		log.info("getTeacherById[3]: searched teacher: {}", searchedTeacher);
 		return searchedTeacher;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getGroupById(String) getGroupById} method to retrieve data about the group with the given ID.
+	 */
 	@Override
 	public Group getGroupById(String id) throws Exception {
 		log.debug("getGroupById[1]: id = {}", id);
@@ -404,9 +466,13 @@ public class DataProviderCsv implements IDataProvider {
 			log.error("getGroupById[2]: error: {}", e.getMessage());
 			throw new Exception("there is no group with this id");
 		}
+		log.info("getGroupById[3]: searched group: {}", searchedGroup);
 		return searchedGroup;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getScheduleUnitById(String, TypeOfSchedule) getScheduleUnitById} method to retrieve data about the schedule unit with the given ID and type.
+	 */
 	@Override
 	public ScheduleUnit getScheduleUnitById(String id, TypeOfSchedule type) throws Exception {
 		log.debug("getScheduleUnitById[1]: id = {}", id);
@@ -422,9 +488,13 @@ public class DataProviderCsv implements IDataProvider {
 			log.error("getScheduleUnitById[2]: error: {}", e.getMessage());
 			throw new Exception("there is no scheduleUnit with this id");
 		}
+		log.info("getScheduleUnitById[3]: searched schedule unit: {}", searchedScheduleUnit);
 		return searchedScheduleUnit;
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getSubjectById(String) getSubjectById} method to retrieve data about the subject with the given ID.
+	 */
 	@Override
 	public Subject getSubjectById(String id) throws Exception {
 		log.debug("getSubjectById[1]: id = {}", id);
@@ -439,29 +509,49 @@ public class DataProviderCsv implements IDataProvider {
 			log.error("getSubjectById[2]: error: {}", e.getMessage());
 			throw new Exception("there is no subject with this id");
 		}
+		log.info("getSubjectById[3]: searched subject: {}", searchedSubject);
 		return searchedSubject;
 	}
+
+	/**
+	 * Uses the {@link IDataProvider#getAllStudents() getAllStudents} method to get a list of all students in the system.
+	 */
 	@Override
 	public List<Student> getAllStudents() {
 		return getAllRecords(studentsFile, Student.class);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllTeachers() getAllTeachers} method to get a list of all teachers in the system.
+	 */
 	@Override
 	public List<Teacher> getAllTeachers() {
 		return getAllRecords(teachersFile, Teacher.class);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllScheduleUnits(TypeOfSchedule) getAllScheduleUnits} method to get a list of all schedule units of the specified type in the system.
+	 */
 	@Override
 	public List<ScheduleUnit> getAllScheduleUnits(TypeOfSchedule type) {
 		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
 		return getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#getAllSubjects() getAllSubjects} method to get a list of all subjects in the system.
+	 */
 	@Override
 	public List<Subject> getAllSubjects() {
 		return getAllRecords(subjectsFile, Subject.class);
 	}
 
+	/**
+	 * Saves a list of groups along with their associated students to a CSV file.
+	 *
+	 * @param groups The list of Group objects to be saved to the CSV file.
+	 *
+	 */
 	public void saveGroups(List<Group> groups) {
 		log.debug("saveGroups[1]: save groups: {}", groups);
 		try (CSVWriter csvWriter = new CSVWriter(new FileWriter(groupsFile))) {
@@ -481,9 +571,12 @@ public class DataProviderCsv implements IDataProvider {
 		}
 	}
 
+	/**
+	 * Uses the {@link IDataProvider#dataTransform(String)} () dataTransform} method to transform data from excel to other format.
+	 */
 	@Override
 	public void dataTransform(String sourceFilePath) throws Exception {
-		log.debug("dataTransform[1]: transform data from file: {}", sourceFilePath);
+		log.info("dataTransform[1]: transform data from file: {}", sourceFilePath);
 		List<ExcelRow> excelRows = dataLoading(sourceFilePath);
 
 		List<Student> students = convertToStudents(excelRows);

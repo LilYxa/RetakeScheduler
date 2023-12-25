@@ -8,20 +8,16 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import ru.sfedu.retakescheduler.Constants;
 import ru.sfedu.retakescheduler.model.*;
-import ru.sfedu.retakescheduler.utils.ExcelUtil;
 import ru.sfedu.retakescheduler.utils.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
-import static ru.sfedu.retakescheduler.utils.DataUtil.*;
-import static ru.sfedu.retakescheduler.utils.CsvUtil.*;
+import static ru.sfedu.retakescheduler.utils.ScheduleUtil.createTestSchedule;
 
 public class DataProviderCsvTest extends BaseTest {
 
@@ -35,23 +31,6 @@ public class DataProviderCsvTest extends BaseTest {
 	private static DataProviderCsv dataProviderCsv2;
 	private static String testPath;
 
-	Student student1 = new Student("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "53b51af6-04df-4af5-8bdb-499436bc575a", 77.5);
-	Student student2 = new Student("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "8bccaa52-ef8c-4b1a-879f-10c6dfea861d", 94.6);
-	final Student student3 = new Student("Sidorov", "Sidor", "Sidorovich","sidorov@mail.ru", "1e1d663e-29d4-4599-a2a2-18723e47f560", 88.8);
-	Teacher teacher = new Teacher("Васильев", "Иван", "Николаевич", "vasiliev@mail.ru", "teach1", LocalDate.now());
-	Teacher teacher2 = new Teacher("Васильев", "Вася", "Николаевич", "vasi@mail.ru", "teach2", LocalDate.now());
-	Teacher teacher3 = new Teacher("Васил", "Иван", "Николаевич", "va@mail.ru", "teach3", LocalDate.now());
-	Group group = new Group("22ВТ-12.03.01.01-о1", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Group group2 = new Group("22ВТ-12.03.01.01-о2", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Group group3 = new Group("22ВТ-12.03.01.01-о3", 1, "Бакалавриат", LocalDate.now().with(DayOfWeek.TUESDAY), new ArrayList<>(Arrays.asList(student1, student2, student3)));
-	Subject subject = new Subject("q2dw1", "Математика", "Экзамен");
-	Subject subject2 = new Subject("q2dw1fddxfd", "Физика", "Экзамен");
-	Subject subject3 = new Subject("q2dw1kjb", "История", "Экзамен");
-
-	ScheduleUnit scheduleUnit = new ScheduleUnit("jknkjwndkcjnwkdjcn", LocalDateTime.of(2023, 12, 12, 12, 12), "subjectId", "location", "personId", "groupId");
-	ScheduleUnit scheduleUnit2 = new ScheduleUnit("jknkjwndk", LocalDateTime.of(2023, 12, 14, 12, 12), "subjectId", "location", "personId", "groupId");
-	ScheduleUnit scheduleUnit3 = new ScheduleUnit("okwokdmwok", LocalDateTime.of(2023, 12, 11, 12, 12), "subjectId", "location", "personId", "groupId");
-
 	private static final Logger log = LogManager.getLogger(DataProviderCsvTest.class);
 	@BeforeEach
 	public void beforeEach() {
@@ -60,7 +39,6 @@ public class DataProviderCsvTest extends BaseTest {
 		teachersFile = testPath.concat(Constants.CSV_FOLDER).concat(Constants.TEACHER_FILE).concat(Constants.CSV_FILE_TYPE);
 		groupsFile = testPath.concat(Constants.CSV_FOLDER).concat(Constants.GROUP_FILE).concat(Constants.CSV_FILE_TYPE);
 		subjectsFile = testPath.concat(Constants.CSV_FOLDER).concat(Constants.SUBJECT_FILE).concat(Constants.CSV_FILE_TYPE);
-//		scheduleUnitsFile = testPath.concat(Constants.SCHEDULE_UNIT_FILE).concat(Constants.CSV_FILE_TYPE);
 		mainScheduleUnitsFile = testPath.concat(Constants.CSV_FOLDER).concat(Constants.MAIN_SCHEDULE_UNIT_FILE).concat(Constants.CSV_FILE_TYPE);
 		retakeScheduleUnitsFile = testPath.concat(Constants.CSV_FOLDER).concat(Constants.RETAKE_SCHEDULE_UNIT_FILE).concat(Constants.CSV_FILE_TYPE);
 		dataProviderCsv1 = new DataProviderCsv();
@@ -212,6 +190,24 @@ public class DataProviderCsvTest extends BaseTest {
 	}
 
 	@Test
+	public void testSaveSchedulePositive() throws Exception {
+		log.debug("testSaveSchedulePositive[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN, List.of(scheduleUnit, scheduleUnit2, scheduleUnit3));
+		log.debug("testSaveSchedulePositive[2]: schedule: {}", schedule);
+		dataProviderCsv2.saveSchedule(schedule);
+		assertNotNull(dataProviderCsv2.getAllScheduleUnits(TypeOfSchedule.MAIN));
+	}
+
+	@Test
+	public void testSaveScheduleEmpty() throws Exception {
+		log.debug("testSaveScheduleEmpty[1]: start test");
+		Schedule schedule = new Schedule(TypeOfSchedule.MAIN);
+		log.debug("testSaveScheduleEmpty[2]: schedule: {}", schedule);
+		dataProviderCsv2.saveSchedule(schedule);
+		assertTrue(dataProviderCsv2.getAllScheduleUnits(TypeOfSchedule.MAIN).isEmpty());
+	}
+
+	@Test
 	public void testGetStudentByIdPositive() throws Exception {
 		log.debug("testGetStudentByIdPositive[1]: test start");
 		dataProviderCsv2.saveStudent(student3);
@@ -312,17 +308,6 @@ public class DataProviderCsvTest extends BaseTest {
 		});
 		assertEquals("there is no scheduleUnit with this id", exception.getMessage());
 	}
-
-//	@Test
-//	public void testGetAllRecords() {
-//		log.debug("testGetAllRecords[1]: test start");
-//		List<Student> res = dataProviderCsv2.getAllRecords(studentsFile, Student.class);
-//		for (Student student : res) {
-//			log.debug("testGetAllRecords[2] studentLastName = {}", student.getLastName());
-//			log.debug("testGetAllRecords[3] studentFirstName = {}", student.getFirstName());
-//		}
-//		log.debug("testGetAllRecords[4]: students: {}", res);
-//	}
 
 	@Test
 	public void testDeleteStudentByIdPositive() throws Exception {
@@ -606,34 +591,48 @@ public class DataProviderCsvTest extends BaseTest {
 //		log.debug("testDeleteStudents[3]: students after removing: {}", studentsAfterDelete);
 //	}
 
-//	@Test
-//	public void testDataLoading() throws IOException {
-//		log.debug("testDataLoading[1]: start test");
-//		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
-//		File file = files.get(0);
-//		List<List<?>> result = dataProviderCsv2.dataLoading(file.getPath());
-//		log.debug("testDataLoading[2]: list after loading: {}", result);
-//	}
+	@Test
+	public void testDataLoadingPositive() throws Exception {
+		log.debug("testDataLoadingPositive[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		List<ExcelRow> result = dataProviderCsv2.dataLoading(file.getPath());
+		log.debug("testDataLoadingPositive[2]: list after loading: {}", result);
+		assertNotNull(result);
+		assertFalse(result.isEmpty());
+	}
 
-//	@Test
-//	public void testDeleteStudentById() {
-//		log.debug("testDeleteStudentById[1]: start test");
-//		List<Student> expectedStudents = Arrays.asList(student2, student3);
-//		log.debug("testDeleteStudentById[2]: delete student: {}", student1);
-////		dataProviderCsv2.deleteStudentById(student1.getStudentId());
-//		List<Student> actualStudents = dataProviderCsv2.getAllStudents();
-//		assertEquals(expectedStudents, actualStudents);
-//		log.debug("testDeleteStudentById[3]: test succeeded");
-//	}
+	@Test
+	public void testDataLoadingNegative() {
+		log.debug("testDataLoadingNegative[1]: start test");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.dataLoading("non-existing file");
+		});
+		assertEquals("there is no file", exception.getMessage());
+	}
 
-//	@Test
-//	public void testValidation() {
-//		log.debug("testValidation[1]: start test");
-//		List<Student> students = Arrays.asList(student1);
-//
-//		HashMap<Object, HashMap<String, String>> result = dataProviderCsv2.validation(subject);
-//		log.debug("testValidation[2]: result of validation: {}", result);
-//	}
+	@Test
+	public void testCheckEntityExistenceIfExist() throws Exception {
+		log.debug("testCheckEntityExistenceIfExist[1]: start test");
+		List<Student> students = List.of(student1, student2, student3);
+		log.debug("testCheckEntityExistenceIfExist[1]: students: {}, searched student: {}", students, student1);
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.checkIfEntityExist(students, student1, "this student already exist");
+		});
+		assertEquals("this student already exist", exception.getMessage());
+	}
+
+	@Test
+	public void testCheckEntityExistenceIfNotExist() throws Exception {
+		log.debug("testCheckEntityExistenceIfNotExist[1]: start test");
+		List<Student> students = List.of(student2, student3);
+		log.debug("testCheckEntityExistenceIfNotExist[1]: students: {}, searched student: {}", students, student1);
+		try {
+			dataProviderCsv2.checkIfEntityExist(students, student1, "this student already exist");
+		} catch (Exception e) {
+			fail();
+		}
+	}
 
 	@Test
 	public void testDataTransform() throws Exception {
@@ -649,6 +648,15 @@ public class DataProviderCsvTest extends BaseTest {
 		assertNotNull(teachers);
 		assertNotNull(subjects);
 		assertNotNull(groups);
+	}
+
+	@Test
+	public void testDataTransformNegative() {
+		log.debug("testDataTransformNegative[1]: start test");
+		Exception exception = assertThrows(Exception.class, () -> {
+			dataProviderCsv2.dataTransform("a non-existent path");
+		});
+		assertEquals("there is no file", exception.getMessage());
 	}
 
 //	@Test
@@ -715,19 +723,27 @@ public class DataProviderCsvTest extends BaseTest {
 		LocalDate startDate = LocalDate.of(2023, 11, 27);
 		LocalDate endDate = LocalDate.of(2023, 12, 15);
 
-		Schedule result = dataProviderCsv2.createSchedule(mainSchedule, startDate, endDate, false, false);
+		Schedule result = dataProviderCsv2.createSchedule(mainSchedule, startDate, endDate, true, false);
 //		saveRecords(result.getUnits(), retakeScheduleUnitsFile, ScheduleUnit.class, getObjectFields(new ScheduleUnit()));
 		dataProviderCsv2.saveSchedule(result);
 		log.debug("testCreateSchedule[2]: created schedule: {}", result);
 		assertNotNull(result);
+		assertNotNull(result.getUnits());
 	}
-//
-//	@Test
-//	public void testGetAllScheduleUnits() {
-//		log.debug("testGetAllScheduleUnits[1]: start test");
-//		List<ScheduleUnit> scheduleUnits = dataProviderCsv2.getAllScheduleUnits(TypeOfSchedule.MAIN);
-//		log.debug("testGetAllScheduleUnits[2]: list of schedule units: {}", scheduleUnits);
-//	}
+
+	@Test
+	public void testCreateScheduleEmptyMainSchedule() throws Exception {
+		log.debug("testCreateScheduleEmptyMainSchedule[1]: start test");
+		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+		File file = files.get(0);
+		dataProviderCsv2.dataTransform(file.getPath());
+		Schedule main = new Schedule(TypeOfSchedule.MAIN);
+		LocalDate startDate = LocalDate.of(2023, 11, 27);
+		LocalDate endDate = LocalDate.of(2023, 12, 15);
+		Exception exception = assertThrows(NullPointerException.class, () -> {
+			Schedule retake = dataProviderCsv2.createSchedule(main, startDate, endDate, false, false);
+		});
+	}
 
 //	@Test
 //	public void testSendEmail() {

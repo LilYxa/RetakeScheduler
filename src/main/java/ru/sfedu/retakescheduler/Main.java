@@ -4,19 +4,18 @@ import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.glassfish.jaxb.runtime.v2.runtime.reflect.opt.Const;
 import ru.sfedu.retakescheduler.api.DataProviderCsv;
 import ru.sfedu.retakescheduler.api.DataProviderPostgres;
 import ru.sfedu.retakescheduler.api.DataProviderXml;
 import ru.sfedu.retakescheduler.api.IDataProvider;
 import ru.sfedu.retakescheduler.model.*;
 import ru.sfedu.retakescheduler.utils.PropertiesConfigUtil;
+import ru.sfedu.retakescheduler.utils.ScheduleUtil;
 
 import java.io.File;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -69,22 +68,20 @@ public class Main {
 				} catch (Exception e) {
 					log.error("main[5]: error: {}", e.getMessage());
 				}
-				log.info("main[6]: Студент был успешно добавлен");
 			}
 			if (cmd.hasOption(Constants.CLI_NEW_TEACHER)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_NEW_TEACHER);
-				log.info("main[7]: Создание преподавателя: {}", Arrays.toString(arguments));
+				log.info("main[6]: Создание преподавателя: {}", Arrays.toString(arguments));
 				Teacher teacher = new Teacher(arguments[0], arguments[1], arguments[2], arguments[3], LocalDate.parse(arguments[4]));
 				try {
 					dataProvider.saveTeacher(teacher);
 				} catch (Exception e) {
-					log.error("main[8]: error: {}", e.getMessage());
+					log.error("main[7]: error: {}", e.getMessage());
 				}
-				log.info("main[9]: Преподаватель был успешно добавлен");
 			}
 			if (cmd.hasOption(Constants.CLI_NEW_GROUP)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_NEW_GROUP);
-				log.info("main[10]: Создание группы: {}", Arrays.toString(arguments));
+				log.info("main[8]: Создание группы: {}", Arrays.toString(arguments));
 				List<Student> students = new ArrayList<>();
 				String[] studentsStrings = arguments[arguments.length - 1].trim().split(",");
 				try {
@@ -96,43 +93,42 @@ public class Main {
 						students.add(finalStudent);
 					});
 				} catch (Exception e) {
-					log.error("main[11]: error: {}", e.getMessage());
+					log.error("main[9]: error: {}", e.getMessage());
 				}
-				log.debug("main[12]: Студенты в данной группе: {}", students);
+				log.debug("main[10]: Студенты в данной группе: {}", students);
 				Group group = new Group(arguments[0], Integer.parseInt(arguments[1]), arguments[2], LocalDate.parse(arguments[3]), students);
 				try {
 					dataProvider.saveGroup(group);
 				} catch (Exception e) {
-					log.error("main[13]: error: {}", e.getMessage());
+					log.error("main[11]: error: {}", e.getMessage());
 				}
-				log.info("main[14]: Группа была успешно создана");
 			}
 			if (cmd.hasOption(Constants.CLI_NEW_SCHEDULE_UNIT)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_NEW_SCHEDULE_UNIT);
-				log.info("main[15]: Создание ячейки расписания: {}", Arrays.toString(arguments));
+				log.info("main[12]: Создание ячейки расписания: {}", Arrays.toString(arguments));
+				DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 				TypeOfSchedule type = arguments[0].equals(Constants.MAIN_SCHEDULE_TYPE) ? TypeOfSchedule.MAIN : TypeOfSchedule.RETAKE;
-				ScheduleUnit scheduleUnit = new ScheduleUnit(LocalDateTime.parse(arguments[1]), arguments[2], arguments[3], arguments[4], arguments[5]);
 				try {
+					ScheduleUnit scheduleUnit = new ScheduleUnit(LocalDateTime.parse(arguments[1], dateTimeFormatter), arguments[2], arguments[3], arguments[4], arguments[5]);
 					dataProvider.saveScheduleUnit(scheduleUnit, type);
 				} catch (Exception e) {
-					log.error("main[16]: error: {}", e.getMessage());
+					log.error("main[13]: error: {}", e.getMessage());
 				}
-				log.info("main[17]: Ячейка расписания была успешно создана");
+				log.info("main[14]: Ячейка расписания была успешно создана");
 			}
 			if (cmd.hasOption(Constants.CLI_NEW_SUBJECT)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_NEW_SUBJECT);
-				log.info("main[18]: Создание предмета: {}", Arrays.toString(arguments));
+				log.info("main[15]: Создание предмета: {}", Arrays.toString(arguments));
 				Subject subject = new Subject(arguments[0], arguments[1]);
 				try {
 					dataProvider.saveSubject(subject);
 				} catch (Exception e) {
-					log.error("main[19]: error: {}", e.getMessage());
+					log.error("main[16]: error: {}", e.getMessage());
 				}
-				log.info("main[20]: Предмет был успешно создан");
 			}
 			if (cmd.hasOption(Constants.CLI_DELETE_RECORD)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_DELETE_RECORD);
-				log.info("main[21]: Удаление {}, ID: {}", arguments[0], arguments[1]);
+				log.info("main[17]: Удаление {}, ID: {}", arguments[0], arguments[1]);
 				try {
 					switch (arguments[0]) {
 						case "student" -> dataProvider.deleteStudentById(arguments[1]);
@@ -141,50 +137,51 @@ public class Main {
 						case "subject" -> dataProvider.deleteSubjectById(arguments[1]);
 					}
 				} catch (Exception e) {
-					log.error("main[22]: error: {}", e.getMessage());
+					log.error("main[18]: error: {}", e.getMessage());
 				}
 			}
 			if (cmd.hasOption(Constants.CLI_DELETE_SCHEDULE_UNIT)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_DELETE_SCHEDULE_UNIT);
 				TypeOfSchedule type = arguments[0].equals(Constants.MAIN_SCHEDULE_TYPE) ? TypeOfSchedule.MAIN : TypeOfSchedule.RETAKE;
-				log.info("main[23]: Удаление {} ячейки расписания с ID: {}", arguments[0], arguments[1]);
+				log.info("main[19]: Удаление {} ячейки расписания с ID: {}", arguments[0], arguments[1]);
 				try {
 					dataProvider.deleteScheduleUnitById(arguments[1], type);
 				} catch (Exception e) {
-					log.error("main[24]: error: {}", e.getMessage());
+					log.error("main[20]: error: {}", e.getMessage());
 				}
 			}
 			if (cmd.hasOption(Constants.CLI_DATA_TRANSFORM)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_DATA_TRANSFORM);
 				String path = arguments.length == 0 ? Constants.DEFAULT_PATH_EXCEL_FILE : arguments[0];
-				log.info("main[25]: Трансформация данных из файла: {}", path);
+				log.info("main[21]: Трансформация данных из файла: {}", path);
 				try {
 					dataProvider.dataTransform(path);
 				} catch (Exception e) {
-					log.error("main[26]: error: {}", e.getMessage());
+					log.error("main[22]: error: {}", e.getMessage());
 				}
 			}
 			if (cmd.hasOption(Constants.CLI_CREATE_RETAKE_SCHEDULE)) {
 				String[] arguments = cmd.getOptionValues(Constants.CLI_CREATE_RETAKE_SCHEDULE);
-				log.info("main[27]: Создание распиания пересдач: {}", Arrays.toString(arguments));
+				log.info("main[23]: Создание распиания пересдач: {}", Arrays.toString(arguments));
 				Schedule mainSchedule = new Schedule(TypeOfSchedule.MAIN, dataProvider.getAllScheduleUnits(TypeOfSchedule.MAIN));
 				try {
-					dataProvider.createSchedule(mainSchedule, LocalDate.parse(arguments[0]), LocalDate.parse(arguments[1]), Boolean.parseBoolean(arguments[2]), Boolean.parseBoolean(arguments[3]));
+					Schedule retake = dataProvider.createSchedule(mainSchedule, LocalDate.parse(arguments[0]), LocalDate.parse(arguments[1]), Boolean.parseBoolean(arguments[2]), Boolean.parseBoolean(arguments[3]));
+					dataProvider.saveSchedule(retake);
 				} catch (Exception e) {
-					log.error("main[28]: error: {}", e.getMessage());
+					log.error("main[24]: error: {}", e.getMessage());
+				}
+			}
+			if (cmd.hasOption(Constants.CLI_CREATE_MAIN_SCHEDULE)) {
+				String[] arguments = cmd.getOptionValues(Constants.CLI_CREATE_MAIN_SCHEDULE);
+				log.info("main[25]: Создание основного расписания: {}", Arrays.toString(arguments));
+				try {
+					Schedule mainSchedule = ScheduleUtil.createTestSchedule(dataProvider);
+					dataProvider.saveSchedule(mainSchedule);
+				} catch (Exception e) {
+					log.error("main[26]: error: {}", e.getMessage());
 				}
 			}
 			if (cmd.hasOption(Constants.CLI_HELP)) {
-//				helpPrint(
-//						150,
-//						Constants.CLI_PRINT_HELP_HEADER,
-//						createOptions(),
-//						2,
-//						5,
-//						Constants.CLI_PRINT_HELP_FOOTER,
-//						true,
-//						System.out
-//				);
 				HelpFormatter helpFormatter = new HelpFormatter();
 				helpFormatter.printHelp(
 						120,
@@ -195,7 +192,7 @@ public class Main {
 						true);
 			}
 		} catch (ParseException e) {
-			log.error("main[]: error: {}", e.getMessage());
+			log.error("main[27]: error: {}", e.getMessage());
 		}
 	}
 
@@ -263,8 +260,6 @@ public class Main {
 		dataTransformOption.setOptionalArg(true);
 
 		Option createMainScheduleOption = new Option(Constants.CLI_CREATE_MAIN_SCHEDULE, true, Constants.CLI_DESCRIPTION_CREATE_MAIN_SCHEDULE);
-		createMainScheduleOption.setArgName(Constants.CLI_ARGS_NAME_CREATE_MAIN_SCHEDULE);
-		createMainScheduleOption.setArgs(1);
 		createMainScheduleOption.setOptionalArg(true);
 
 		Option createRetakeScheduleOption = new Option(Constants.CLI_CREATE_RETAKE_SCHEDULE, true, Constants.CLI_DESCRIPTION_CREATE_RETAKE_SCHEDULE);
