@@ -26,8 +26,6 @@ public class Group implements EntityInterface {
 	@XmlJavaTypeAdapter(LocalDateAdapter.class)
 	@CsvBindByPosition(position = 3)
 	private LocalDate busyDay;
-//	@CsvBindByPosition(position = 4)
-//	@CsvBindAndSplitByPosition(position = 4, required = true, elementType = Student.class, splitOn = ",")
 	@XmlElementWrapper(name = "students")
 	@XmlElement(name = "student")
 	private List<Student> students;

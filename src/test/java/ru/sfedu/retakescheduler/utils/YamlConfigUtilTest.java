@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 
 public class YamlConfigUtilTest {
-	private static final Logger log = LogManager.getLogger(YamlConfigUtilTest.class);
+	private static final Logger log = LogManager.getLogger(YamlConfigUtilTest.class.getName());
 	@Test
 	public void testGetProperty() {
 		log.debug("testGetProperty[1]: start test");

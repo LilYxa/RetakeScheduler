@@ -3,6 +3,7 @@ package ru.sfedu.retakescheduler.utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.sfedu.retakescheduler.Constants;
+import ru.sfedu.retakescheduler.api.IDataProvider;
 import ru.sfedu.retakescheduler.model.*;
 
 import java.lang.reflect.Field;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DataUtil {
-	private static final Logger log = LogManager.getLogger(DataUtil.class);
+	private static final Logger log = LogManager.getLogger(DataUtil.class.getName());
 
 	/**
 	 * Performs validation on an entity object and returns a map containing the object and a map of validation errors.
@@ -391,5 +392,66 @@ public class DataUtil {
 							optionalSubject.ifPresent(subject ->
 									teacherSubjectMapping.addTeacherSubject(teacher, subject)));
 				});
+	}
+
+	/**
+	 * Saves a student to the CSV file if the student does not already exist.
+	 *
+	 * @param student    The student to be saved.
+	 *
+	 * @throws Exception    If an exception occurs during the student saving process.
+	 *                      If the student already exist
+	 */
+	public static void saveStudentIfNotExist(Student student, IDataProvider dataProvider) throws Exception {
+		log.debug("saveStudentIfNotExist[1]: check student: {}", student);
+		List<Student> actualStudents = dataProvider.getAllStudents();
+		try {
+			actualStudents.stream()
+					.filter(student1 -> student1.equals(student))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			dataProvider.saveStudent(student);
+			log.debug("saveStudentIfNotExist[2]: student: {} was saved", student);
+		}
+	}
+
+	/**
+	 * Checks the integrity of the data in the provided {@code ScheduleUnit} by verifying that the associated
+	 * {@code Teacher}, {@code Subject}, and {@code Group} objects exist in the respective data sets obtained
+	 * from the given {@code IDataProvider}.
+	 *
+	 * @param scheduleUnit The {@code ScheduleUnit} to be checked for data integrity.
+	 * @param dataProvider The {@code IDataProvider} used to retrieve lists of all available {@code Teacher},
+	 *                     {@code Subject}, and {@code Group} objects.
+	 * @throws NoSuchElementException If the data integrity check fails, indicating that the associated
+	 *                                {@code Teacher}, {@code Subject}, or {@code Group} is not found in
+	 *                                the corresponding data sets.
+	 */
+	public static void checkScheduleUnitData(ScheduleUnit scheduleUnit, IDataProvider dataProvider) throws NoSuchElementException {
+		Teacher teacher = (Teacher) scheduleUnit.getPerson();
+		Subject subject = scheduleUnit.getSubject();
+		Group group = scheduleUnit.getGroup();
+
+		List<Teacher> teachers = dataProvider.getAllTeachers();
+		List<Subject> subjects = dataProvider.getAllSubjects();
+		List<Group> groups = dataProvider.getAllGroups();
+		try {
+			teachers.stream()
+					.filter(teacher1 -> teacher1.equals(teacher))
+					.findFirst()
+					.get();
+			subjects.stream()
+					.filter(subject1 -> subject1.equals(subject))
+					.findFirst()
+					.get();
+			groups.stream()
+					.filter(group1 -> group1.equals(group))
+					.findFirst()
+					.get();
+		} catch (NoSuchElementException e) {
+			log.error("saveScheduleUnit[2]: there is an error in scheduleUnit. Check subject, teacher or group");
+			throw new NoSuchElementException("there is an error in scheduleUnit. Check subject, teacher or group");
+		}
 	}
 }

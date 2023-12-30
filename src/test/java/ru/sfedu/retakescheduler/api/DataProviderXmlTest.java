@@ -10,11 +10,8 @@ import ru.sfedu.retakescheduler.model.*;
 import ru.sfedu.retakescheduler.utils.FileUtil;
 
 import java.io.File;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static ru.sfedu.retakescheduler.utils.ScheduleUtil.createTestSchedule;
@@ -31,7 +28,7 @@ public class DataProviderXmlTest extends BaseTest {
 	private static DataProviderXml dataProviderXml1;
 	private static DataProviderXml dataProviderXml2;
 	private static String testPath;
-	private static final Logger log = LogManager.getLogger(DataProviderXmlTest.class);
+	private static final Logger log = LogManager.getLogger(DataProviderXmlTest.class.getName());
 
 	@BeforeEach
 	public void beforeEach() {
@@ -119,10 +116,6 @@ public class DataProviderXmlTest extends BaseTest {
 		log.debug("testSaveGroupPositive[1]: test start");
 		log.debug("testSaveGroupPositive[2]: group1: {}", group);
 
-		dataProviderXml2.saveStudent(student1);
-		dataProviderXml2.saveStudent(student2);
-		dataProviderXml2.saveStudent(student3);
-
 		dataProviderXml2.saveGroup(group);
 		dataProviderXml2.saveGroup(group2);
 		dataProviderXml2.saveGroup(group3);
@@ -149,6 +142,9 @@ public class DataProviderXmlTest extends BaseTest {
 	public void testSaveScheduleUnitPositive() throws Exception {
 		log.debug("testSaveScheduleUnitPositive[1]: test start");
 		log.debug("testSaveScheduleUnitPositive[2]: scheduleUnit1: {}", scheduleUnit);
+		saveRecords(List.of(subject, subject2, subject3), subjectsFile, Subject.class);
+		saveRecords(List.of(teacher, teacher2, teacher3), teachersFile, Teacher.class);
+		saveRecords(List.of(group, group2, group3), groupsFile, Group.class);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit2, TypeOfSchedule.MAIN);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit3, TypeOfSchedule.MAIN);
@@ -161,6 +157,9 @@ public class DataProviderXmlTest extends BaseTest {
 	public void testSaveScheduleUnitNegative() throws Exception {
 		log.debug("testSaveScheduleUnitNegative[1]: test start");
 		log.debug("testSaveScheduleUnitNegative[2]: scheduleUnit1: {}", scheduleUnit);
+		dataProviderXml2.saveSubject(subject);
+		dataProviderXml2.saveTeacher(teacher);
+		dataProviderXml2.saveGroup(group);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		Exception exception = assertThrows(Exception.class, () -> {
 			dataProviderXml2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
@@ -326,12 +325,10 @@ public class DataProviderXmlTest extends BaseTest {
 	public void testDeleteScheduleUnitByIdPositive() throws Exception {
 		log.debug("testDeleteScheduleUnitById[1]: test start");
 		List<ScheduleUnit> expectedScheduleUnitsAfterDelete = new ArrayList<>();
-		expectedScheduleUnitsAfterDelete.add(scheduleUnit2);
-		expectedScheduleUnitsAfterDelete.add(scheduleUnit3);
-
+		dataProviderXml2.saveSubject(subject);
+		dataProviderXml2.saveTeacher(teacher);
+		dataProviderXml2.saveGroup(group);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
-		dataProviderXml2.saveScheduleUnit(scheduleUnit2, TypeOfSchedule.MAIN);
-		dataProviderXml2.saveScheduleUnit(scheduleUnit3, TypeOfSchedule.MAIN);
 
 		List<ScheduleUnit> scheduleUnitsBeforeDelete = dataProviderXml2.getAllScheduleUnits(TypeOfSchedule.MAIN);
 		log.debug("testDeleteScheduleUnitById[2]: schedule units before removing: {}", scheduleUnitsBeforeDelete);
@@ -434,6 +431,9 @@ public class DataProviderXmlTest extends BaseTest {
 	@Test
 	public void testGetScheduleUnitByIdPositive() throws Exception {
 		log.debug("testGetScheduleUnitByIdPositive[1]: test start");
+		dataProviderXml2.saveSubject(subject);
+		dataProviderXml2.saveTeacher(teacher);
+		dataProviderXml2.saveGroup(group);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		log.debug("testGetScheduleUnitByIdPositive[2]: expected schedule unit: {}", scheduleUnit);
 		ScheduleUnit actualScheduleUnit = dataProviderXml2.getScheduleUnitById(scheduleUnit.getScheduleUnitId(), TypeOfSchedule.MAIN);
@@ -669,6 +669,9 @@ public class DataProviderXmlTest extends BaseTest {
 		List<ScheduleUnit> expectedList = new ArrayList<>();
 		expectedList.add(scheduleUnit);
 		expectedList.add(scheduleUnit2);
+		saveRecords(List.of(subject, subject2), subjectsFile, Subject.class);
+		saveRecords(List.of(teacher, teacher2), teachersFile, Teacher.class);
+		saveRecords(List.of(group, group2), groupsFile, Group.class);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit, TypeOfSchedule.MAIN);
 		dataProviderXml2.saveScheduleUnit(scheduleUnit2, TypeOfSchedule.MAIN);
 		List<ScheduleUnit> actualList = dataProviderXml2.getAllScheduleUnits(TypeOfSchedule.MAIN);

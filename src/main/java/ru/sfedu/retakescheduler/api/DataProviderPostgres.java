@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
 
 public class DataProviderPostgres implements IDataProvider{
 
-	private static final Logger log = LogManager.getLogger(DataProviderPostgres.class);
+	private static final Logger log = LogManager.getLogger(DataProviderPostgres.class.getName());
 	private final MongoBeanHistory loggingObject = new MongoBeanHistory();
 
 
@@ -234,15 +234,16 @@ public class DataProviderPostgres implements IDataProvider{
 	public void saveScheduleUnit(ScheduleUnit scheduleUnit, TypeOfSchedule type) throws Exception {
 		log.info("saveScheduleUnit[1]: save scheduleUnit: {}, type: {}", scheduleUnit, type);
 		final String tableName = type.equals(TypeOfSchedule.MAIN) ? Constants.MAIN_SCHEDULE_UNITS_TABLE_NAME : Constants.RETAKE_SCHEDULE_UNITS_TABLE_NAME;
+		Teacher teacher = (Teacher) scheduleUnit.getPerson();
 		String sql = String.format(
 				Constants.SQL_INSERT_SCHEDULE_UNIT_TEST,
 				tableName,
 				scheduleUnit.getScheduleUnitId(),
 				scheduleUnit.getDateTime().toString(),
 				scheduleUnit.getLocation(),
-				scheduleUnit.getSubjectId(),
-				scheduleUnit.getPersonId(),
-				scheduleUnit.getGroupNumber()
+				scheduleUnit.getSubject().getSubjectId(),
+				teacher.getTeacherId(),
+				scheduleUnit.getGroup().getGroupNumber()
 		);
 		try (Connection connection = getConnection();
 		     Statement statement = connection.createStatement()) {
@@ -288,15 +289,16 @@ public class DataProviderPostgres implements IDataProvider{
 			Statement statement = connection.createStatement()
 		) {
 			for (ScheduleUnit scheduleUnit : schedule.getUnits()) {
+				Teacher teacher = (Teacher) scheduleUnit.getPerson();
 				String sql = String.format(
 						Constants.SQL_INSERT_SCHEDULE_UNIT_TEST,
 						tableName,
 						scheduleUnit.getScheduleUnitId(),
 						scheduleUnit.getDateTime().toString(),
 						scheduleUnit.getLocation(),
-						scheduleUnit.getSubjectId(),
-						scheduleUnit.getPersonId(),
-						scheduleUnit.getGroupNumber()
+						scheduleUnit.getSubject().getSubjectId(),
+						teacher.getTeacherId(),
+						scheduleUnit.getGroup().getGroupNumber()
 				);
 				statement.addBatch(sql);
 				log.info("saveSchedule[2]: scheduleUnit: {} added to batch", scheduleUnit);
@@ -656,7 +658,7 @@ public class DataProviderPostgres implements IDataProvider{
 		) {
 			ScheduleUnit scheduleUnit = null;
 			if (resultSet.next()) {
-				scheduleUnit = mapResultSetToScheduleUnit(resultSet);
+				scheduleUnit = mapResultSetToScheduleUnit(resultSet, this);
 				log.debug("getScheduleUnitById[2]: schedule unit: {}", scheduleUnit);
 			}
 
@@ -781,9 +783,9 @@ public class DataProviderPostgres implements IDataProvider{
 		     ResultSet resultSet = statement.executeQuery(sql)
 		) {
 			while (resultSet.next()) {
-				scheduleUnits.add(mapResultSetToScheduleUnit(resultSet));
+				scheduleUnits.add(mapResultSetToScheduleUnit(resultSet, this));
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			log.error("getAllScheduleUnits[2]: error: {}", e.getMessage());
 		}
 		log.debug("getAllScheduleUnits[3]: scheduleUnits: {}", scheduleUnits);

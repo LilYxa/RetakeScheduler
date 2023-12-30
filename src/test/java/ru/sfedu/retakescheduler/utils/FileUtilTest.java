@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class FileUtilTest {
-	private static final Logger log = LogManager.getLogger(FileUtil.class);
+	private static final Logger log = LogManager.getLogger(FileUtil.class.getName());
 
 	@Test
 	public void testCreateFolderIfNotExists() throws IOException {

@@ -17,7 +17,7 @@ import java.io.Reader;
 import java.util.List;
 
 public class CsvUtil {
-	private static final Logger log = LogManager.getLogger(CsvUtil.class);
+	private static final Logger log = LogManager.getLogger(CsvUtil.class.getName());
 	public static <T> List<T> getAllRecords(String pathToFile, Class<T> tClass) {
 		log.debug("getAllRecords[1]: start");
 		try (Reader reader = new FileReader(pathToFile);

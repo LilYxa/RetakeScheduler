@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import ru.sfedu.retakescheduler.Main;
 
 public class LogsClientTest {
-	private static final Logger log = LogManager.getLogger(Main.class);
+	private static final Logger log = LogManager.getLogger(LogsClientTest.class.getName());
 	private Main client;
 	@BeforeAll
 	public void initTest() {

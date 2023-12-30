@@ -2,10 +2,9 @@ package ru.sfedu.retakescheduler;
 
 import ru.sfedu.retakescheduler.utils.FileUtil;
 
-import java.io.File;
-
 public class Constants {
-	public static final String PROPERTIES_CONFIG_PATH = "src/main/resources/environment.properties";
+//	public static final String PROPERTIES_CONFIG_PATH = "src/main/resources/environment.properties";
+	public static final String PROPERTIES_CONFIG_PATH = "environment.properties";
 	public static final String YAML_CONFIG_PATH = "src/main/resources/environment.yaml";
 	public static final String XML_CONFIG_PATH = "src/main/resources/environment.xml";
 
@@ -83,6 +82,11 @@ public class Constants {
 	public static final String INCORRECT_TRAINING_LEVEL = "Уровень подготовки может состоять из букв латинского и русского алфавита длиною от 0 до 25 символов";
 	public static final String INCORRECT_SUBJECT = "Название предмета может состоять из букв латинского и русского алфавита, символов (.,!@#$%^&*()_+=:-), пробелов. Длина от 2 до 200 символов";
 	public static final String INCORRECT_CONTROL_TYPE = "Тип контроля может состоять из букв латинского и русского алфавита длиною от 2 до 25 символов";
+	public static final String NO_STUDENTS_MESSAGE = "main[%d]: Студенты не найдены";
+	public static final String NO_TEACHERS_MESSAGE = "main[%d]: Преподаватели не найдены";
+	public static final String NO_SUBJECTS_MESSAGE = "main[%d]: Предметы не найдены";
+	public static final String NO_GROUPS_MESSAGE = "main[%d]: Группы не найдены";
+	public static final String NO_SCHEDULE_UNITS_MESSAGE = "main[%d]: Ячейки расписания не найдены";
 
 	public static final String PHYSICAL_TRAINING_FIELD = "ФИЗ-РА";
 	public static final int LESSON_DURATION = 95;
@@ -224,6 +228,11 @@ public class Constants {
 	public static final String CLI_DATA_TRANSFORM = "dt";
 	public static final String CLI_CREATE_MAIN_SCHEDULE = "cms";
 	public static final String CLI_CREATE_RETAKE_SCHEDULE = "crs";
+	public static final String CLI_PRINT_ALL_STUDENTS = "pst";
+	public static final String CLI_PRINT_ALL_SUBJECTS = "ps";
+	public static final String CLI_PRINT_ALL_TEACHERS = "pt";
+	public static final String CLI_PRINT_ALL_GROUPS = "pg";
+	public static final String CLI_PRINT_ALL_SCHEDULE_UNITS = "psu";
 	public static final String CLI_HELP = "help";
 
 	public static final String CLI_PRINT_HELP_HEADER = "--OPTIONS--";
@@ -240,36 +249,24 @@ public class Constants {
 	public static final String CLI_ARGS_NAME_DELETE_SCHEDULE_UNIT = "type schedule_unit_id";
 	public static final String CLI_ARGS_NAME_DATA_TRANSFORM = "path_to_file";
 	public static final String CLI_ARGS_NAME_CREATE_RETAKE_SCHEDULE = "start_date end_date export_to_excel send_email";
-	public static final String CLI_ARGS_LAST_NAME = "last_name";
-	public static final String CLI_ARGS_FIRST_NAME = "first_name";
-	public static final String CLI_ARGS_PATRONYMIC = "patronymic";
-	public static final String CLI_ARGS_EMAIL = "email";
-	public static final String CLI_ARGS_STUDENT_ID = "student_id";
-	public static final String CLI_ARGS_AVERAGE_SCORE = "average_score";
-	public static final String CLI_ARGS_TEACHER_ID = "teacher_id";
-	public static final String CLI_ARGS_BUSY_DAY = "busy_day";
-	public static final String CLI_ARGS_GROUP_NUMBER = "group_number";
-	public static final String CLI_ARGS_COURSE = "course";
-	public static final String CLI_ARGS_LEVEL_OF_TRAINING = "level_of_training";
-	public static final String CLI_ARGS_STUDENTS = "students";
-	public static final String CLI_ARGS_SCHEDULE_UNIT_ID = "schedule_unit_id";
-	public static final String CLI_ARGS_DATE_TIME = "date_time";
-	public static final String CLI_ARGS_LOCATION = "location";
-	public static final String CLI_ARGS_SUBJECT_ID = "subject_id";
-	public static final String CLI_ARGS_SUBJECT_NAME = "subject_name";
-	public static final String CLI_ARGS_CONTROL_TYPE = "control_type";
+	public static final String CLI_ARGS_NAME_PRINT_SCHEDULE_UNITS = "schedule_type";
 
 	public static final String CLI_DESCRIPTION_DATA_TYPE = "Указание типа данных (CSV, XML, Postgres). По умолчанию XML";
 	public static final String CLI_DESCRIPTION_NEW_STUDENT = "Создание новой записи о студенте.";
 	public static final String CLI_DESCRIPTION_NEW_TEACHER = "Создание новой записи о преподавателе.";
 	public static final String CLI_DESCRIPTION_NEW_GROUP = "Создание новой записи о группе студентов.";
-	public static final String CLI_DESCRIPTION_NEW_SCHEDULE_UNIT = "Создание новой записи о занятии в расписании.";
+	public static final String CLI_DESCRIPTION_NEW_SCHEDULE_UNIT = "Создание новой записи о занятии в расписании (schedule_type = MAIN or RETAKE).";
 	public static final String CLI_DESCRIPTION_NEW_SUBJECT = "Создание новой записи о предмете.";
-	public static final String CLI_DESCRIPTION_DELETE_RECORD = "Удаление записи по указанному идентификатору и типу сущности.";
-	public static final String CLI_DESCRIPTION_DELETE_SCHEDULE_UNIT = "Удаление ячейки расписания по указанному идентификатору и типу расписания.";
+	public static final String CLI_DESCRIPTION_DELETE_RECORD = "Удаление записи по указанному идентификатору и типу сущности (student, teacher, subject, group).";
+	public static final String CLI_DESCRIPTION_DELETE_SCHEDULE_UNIT = "Удаление ячейки расписания по указанному идентификатору и типу расписания (schedule_type = MAIN or RETAKE).";
 	public static final String CLI_DESCRIPTION_DATA_TRANSFORM = "Выполнение преобразования данных из Excel формата в другой (CSV, XML, Postgres).";
 	public static final String CLI_DESCRIPTION_CREATE_MAIN_SCHEDULE = "Создание основного расписания с занятиями для всех групп и преподавателей.";
 	public static final String CLI_DESCRIPTION_CREATE_RETAKE_SCHEDULE = "Создание расписания пересдач для студентов.";
+	public static final String CLI_DESCRIPTION_PRINT_ALL_STUDENTS = "Вывод на экран всех студентов.";
+	public static final String CLI_DESCRIPTION_PRINT_ALL_TEACHERS = "Вывод на экран всех преподавателей.";
+	public static final String CLI_DESCRIPTION_PRINT_ALL_SUBJECTS = "Вывод на экран всех предметов.";
+	public static final String CLI_DESCRIPTION_PRINT_ALL_GROUPS = "Вывод на экран всех групп.";
+	public static final String CLI_DESCRIPTION_PRINT_ALL_SCHEDULE_UNITS = "Вывод на экран всех ячеек расписания (schedule_type = MAIN or RETAKE).";
 	public static final String CLI_DESCRIPTION_HELP = "Вспомогательная информация по использованию данного сервиса";
 
 

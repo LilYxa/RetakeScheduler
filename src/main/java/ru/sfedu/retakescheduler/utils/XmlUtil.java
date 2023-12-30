@@ -14,14 +14,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class XmlUtil {
-	private static final Logger log = LogManager.getLogger(DataProviderXml.class);
+	private static final Logger log = LogManager.getLogger(DataProviderXml.class.getName());
 	public static <T> List<T> getAllRecords(String pathToFile, Class<T> tClass) {
 		log.debug("getAllRecords[1]: get records from file: {}", pathToFile);
 		try {
 			File file = new File(pathToFile);
 
 			if (!file.exists() || file.length() == 0) {
-				log.info("getAllRecords[2]: file is empty or doesn't exist {}", pathToFile);
 				return new ArrayList<>();
 			}
 
@@ -48,6 +47,9 @@ public class XmlUtil {
 
 	private static <T> void save(List<T> objects, String pathToFile, Class<T> tClass) {
 		log.debug("save[1]: save {} records", objects.size());
+		if (objects.isEmpty()) {
+			return;
+		}
 		try {
 			File file = new File(pathToFile);
 

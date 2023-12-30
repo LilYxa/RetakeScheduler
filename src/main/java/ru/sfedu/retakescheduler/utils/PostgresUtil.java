@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ru.sfedu.retakescheduler.Constants;
+import ru.sfedu.retakescheduler.api.IDataProvider;
 import ru.sfedu.retakescheduler.model.*;
 
 import java.sql.ResultSet;
@@ -11,7 +12,7 @@ import java.sql.SQLException;
 
 public class PostgresUtil {
 
-	private static final Logger log = LogManager.getLogger(PostgresUtil.class);
+	private static final Logger log = LogManager.getLogger(PostgresUtil.class.getName());
 	public static Student mapResultSetToStudent(ResultSet resultSet) throws SQLException {
 		log.debug("mapResultSetToStudent[1]: resultSet: {}", resultSet);
 		Student student = new Student();
@@ -49,15 +50,15 @@ public class PostgresUtil {
 		return group;
 	}
 
-	public static ScheduleUnit mapResultSetToScheduleUnit(ResultSet resultSet) throws SQLException {
+	public static ScheduleUnit mapResultSetToScheduleUnit(ResultSet resultSet, IDataProvider dataProvider) throws Exception {
 		log.debug("mapResultSetToScheduleUnit[1]: resultSet: {}", resultSet);
 		ScheduleUnit scheduleUnit = new ScheduleUnit();
 		scheduleUnit.setScheduleUnitId(resultSet.getString(Constants.SCHEDULE_UNIT_ID_FIELD));
 		scheduleUnit.setDateTime(resultSet.getTimestamp(Constants.SCHEDULE_UNIT_DATETIME_FIELD).toLocalDateTime());
 		scheduleUnit.setLocation(resultSet.getString(Constants.SCHEDULE_LOCATION_FIELD));
-		scheduleUnit.setSubjectId(resultSet.getString(Constants.SUBJECT_ID_FIELD));
-		scheduleUnit.setPersonId(resultSet.getString(Constants.TEACHER_ID_FIELD));
-		scheduleUnit.setGroupNumber(resultSet.getString(Constants.GROUP_NUMBER_FIELD));
+		scheduleUnit.setSubject(dataProvider.getSubjectById(resultSet.getString(Constants.SUBJECT_ID_FIELD)));
+		scheduleUnit.setPerson(dataProvider.getTeacherById(resultSet.getString(Constants.TEACHER_ID_FIELD)));
+		scheduleUnit.setGroup(dataProvider.getGroupById(resultSet.getString(Constants.GROUP_NUMBER_FIELD)));
 		log.debug("mapResultSetToScheduleUnit[2]: scheduleUnit from resultSet: {}", scheduleUnit);
 		return scheduleUnit;
 	}

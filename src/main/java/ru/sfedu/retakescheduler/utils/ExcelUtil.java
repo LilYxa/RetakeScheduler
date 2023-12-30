@@ -18,7 +18,7 @@ import java.util.List;
 import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 
 public class ExcelUtil {
-	private static final Logger log = LogManager.getLogger(ExcelUtil.class);
+	private static final Logger log = LogManager.getLogger(ExcelUtil.class.getName());
 
 	public static List<ExcelRow> readFromExcel(String filePath) throws IOException {
 		log.debug("readFromExcel[1]: read from file: {}", filePath);

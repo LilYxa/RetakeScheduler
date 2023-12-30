@@ -24,14 +24,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * @author Elland Ilia
  */
 public interface IDataProvider {
-	static final Logger log = LogManager.getLogger(IDataProvider.class);
+	static final Logger log = LogManager.getLogger(IDataProvider.class.getName());
 
 	/**
 	 * Saves information about a student in the system.
@@ -257,10 +255,10 @@ public interface IDataProvider {
 							// Проверка наложения с основным расписанием
 							if (!isOverlapping(mainSchedule, currentDate, lessonDuration)) {
 								ScheduleUnit retakeUnit = new ScheduleUnit();
-								retakeUnit.setSubjectId(subject.getSubjectId());
-								retakeUnit.setPersonId(teacher.getTeacherId());
+								retakeUnit.setSubject(subject);
+								retakeUnit.setPerson(teacher);
 								retakeUnit.setLocation("IVTiPT");
-								retakeUnit.setGroupNumber(group.getGroupNumber());
+								retakeUnit.setGroup(group);
 								retakeUnit.setDateTime(currentDate);
 
 								retakes.add(retakeUnit);
@@ -441,10 +439,9 @@ public interface IDataProvider {
 			int rowNum = 1;
 			for (ScheduleUnit scheduleUnit : scheduleUnits) {
 				Row row = sheet.createRow(rowNum++);
-				row.createCell(0).setCellValue(scheduleUnit.getGroupNumber());
-
-				Subject subject = getSubjectById(scheduleUnit.getSubjectId());
-				Teacher teacher = getTeacherById(scheduleUnit.getPersonId());
+				row.createCell(0).setCellValue(scheduleUnit.getGroup().getGroupNumber());
+				Subject subject = scheduleUnit.getSubject();
+				Person teacher = scheduleUnit.getPerson();
 				String teacherFullname = teacher.getLastName() + " " + teacher.getFirstName() + " " + teacher.getPatronymic();
 
 				row.createCell(1).setCellValue(subject.getSubjectName());

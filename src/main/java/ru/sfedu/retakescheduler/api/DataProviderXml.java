@@ -14,7 +14,7 @@ import static ru.sfedu.retakescheduler.utils.XmlUtil.*;
 
 public class DataProviderXml implements IDataProvider{
 
-	private static final Logger log = LogManager.getLogger(DataProviderXml.class);
+	private static final Logger log = LogManager.getLogger(DataProviderXml.class.getName());
 	private final MongoBeanHistory loggingObject = new MongoBeanHistory();
 
 	private final String studentsFile;
@@ -93,7 +93,14 @@ public class DataProviderXml implements IDataProvider{
 		checkIfEntityExist(groups, group, "this group already exists");
 		groups.add(group);
 		saveRecord(group, groupsFile, Group.class);
-		log.info("saveGroup[1]: group: {} were saved", group);
+		group.getStudents().forEach(student -> {
+			try {
+				saveStudentIfNotExist(student, this);
+			} catch (Exception e) {
+				log.debug("saveGroup[2]: student {} already exists", student);
+			}
+		});
+		log.info("saveGroup[3]: group: {} were saved", group);
 	}
 
 	/**
@@ -106,6 +113,7 @@ public class DataProviderXml implements IDataProvider{
 		List<ScheduleUnit> scheduleUnits = getAllScheduleUnits(type);
 
 		checkIfEntityExist(scheduleUnits, scheduleUnit, "this scheduleUnit already exists");
+		checkScheduleUnitData(scheduleUnit, this);
 		scheduleUnits.add(scheduleUnit);
 		saveRecord(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class);
 		log.info("saveScheduleUnit[1]: schedule unit: {} were saved", scheduleUnit);

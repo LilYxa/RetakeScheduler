@@ -17,13 +17,15 @@ import static ru.sfedu.retakescheduler.utils.FileUtil.*;
 import java.io.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DataProviderCsv implements IDataProvider {
 
-	private static final Logger log = LogManager.getLogger(DataProviderCsv.class);
+	private static final Logger log = LogManager.getLogger(DataProviderCsv.class.getName());
 	private final MongoBeanHistory loggingObject = new MongoBeanHistory();
 
 	private final String studentsFile;
@@ -115,6 +117,13 @@ public class DataProviderCsv implements IDataProvider {
 					})
 					.forEach(csvWriter::writeNext);
 			log.info("saveGroup[2]: save group: {}", group);
+			group.getStudents().forEach(student -> {
+				try {
+					saveStudentIfNotExist(student, this);
+				} catch (Exception e) {
+					log.debug("saveGroup[3]: student: {} already exist", student);
+				}
+			});
 		} catch (IOException e) {
 			log.error("saveGroup[3]: error: {}", e.getMessage());
 		}
@@ -170,11 +179,27 @@ public class DataProviderCsv implements IDataProvider {
 		log.debug("saveScheduleUnit[1]: save ScheduleUnit: {}", scheduleUnit);
 		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
 
-		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
-		checkIfEntityExist(scheduleUnits, scheduleUnit, "this scheduleUnit already exists");
-		scheduleUnits.add(scheduleUnit);
-		save(scheduleUnit, scheduleUnitsFile, ScheduleUnit.class, getObjectFields(scheduleUnit));
-		log.info("saveScheduleUnit[2]: save schedule unit: {}", scheduleUnit);
+		Teacher teacher = (Teacher) scheduleUnit.getPerson();
+		Subject subject = scheduleUnit.getSubject();
+		Group group = scheduleUnit.getGroup();
+		checkScheduleUnitData(scheduleUnit, this);
+		try (CSVWriter csvWriter = new CSVWriter(new FileWriter(scheduleUnitsFile, true))) {
+			List<ScheduleUnit> scheduleUnits = getAllScheduleUnits(type);
+			checkIfEntityExist(scheduleUnits, scheduleUnit, "this scheduleUnit already exists");
+			scheduleUnits.add(scheduleUnit);
+			String[] data = {
+					scheduleUnit.getScheduleUnitId(),
+					scheduleUnit.getDateTime().toString(),
+					subject.getSubjectId(),
+					scheduleUnit.getLocation(),
+					teacher.getTeacherId(),
+					group.getGroupNumber()
+			};
+			csvWriter.writeNext(data);
+			log.info("saveScheduleUnit[3]: save schedule unit: {}", scheduleUnit);
+		} catch (IOException e) {
+			log.error("saveScheduleUnit[4]: error: {}", e.getMessage());
+		}
 	}
 
 	/**
@@ -183,7 +208,24 @@ public class DataProviderCsv implements IDataProvider {
 	public void saveSchedule(Schedule schedule) {
 		log.debug("saveSchedule[1]: saving {} schedule: {}", schedule.getTypeOfSchedule(), schedule);
 		String scheduleUnitsFile = schedule.getTypeOfSchedule().equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
-		saveRecords(schedule.getUnits(), scheduleUnitsFile, ScheduleUnit.class, getObjectFields(new ScheduleUnit()));
+		try (CSVWriter csvWriter = new CSVWriter(new FileWriter(scheduleUnitsFile))) {
+			schedule.getUnits().forEach(scheduleUnit -> {
+				Teacher teacher = (Teacher) scheduleUnit.getPerson();
+				Subject subject = scheduleUnit.getSubject();
+				Group group = scheduleUnit.getGroup();
+				String[] line = {
+						scheduleUnit.getScheduleUnitId(),
+						scheduleUnit.getDateTime().toString(),
+						subject.getSubjectId(),
+						scheduleUnit.getLocation(),
+						teacher.getTeacherId(),
+						group.getGroupNumber()
+				};
+				csvWriter.writeNext(line);
+			});
+		} catch (IOException e) {
+			log.error("saveSchedule[2]: error: {}", e.getMessage());
+		}
 	}
 
 	/**
@@ -476,8 +518,8 @@ public class DataProviderCsv implements IDataProvider {
 	@Override
 	public ScheduleUnit getScheduleUnitById(String id, TypeOfSchedule type) throws Exception {
 		log.debug("getScheduleUnitById[1]: id = {}", id);
-		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
-		List<ScheduleUnit> scheduleUnits = getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
+//		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
+		List<ScheduleUnit> scheduleUnits = getAllScheduleUnits(type);
 		ScheduleUnit searchedScheduleUnit = null;
 		try {
 			searchedScheduleUnit = scheduleUnits.stream()
@@ -535,7 +577,32 @@ public class DataProviderCsv implements IDataProvider {
 	@Override
 	public List<ScheduleUnit> getAllScheduleUnits(TypeOfSchedule type) {
 		String scheduleUnitsFile = type.equals(TypeOfSchedule.MAIN) ? mainScheduleUnitsFile : retakeScheduleUnitsFile;
-		return getAllRecords(scheduleUnitsFile, ScheduleUnit.class);
+		log.info("getAllScheduleUnits[1]: get schedule units from file: {}", scheduleUnitsFile);
+		try (Reader reader = new FileReader(scheduleUnitsFile);
+			CSVReader csvReader = new CSVReader(reader)) {
+
+			List<String[]> lines = csvReader.readAll();
+
+			return lines.stream()
+					.map(line -> {
+						ScheduleUnit scheduleUnit = new ScheduleUnit();
+						scheduleUnit.setScheduleUnitId(line[0]);
+						scheduleUnit.setDateTime(LocalDateTime.parse(line[1], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+						try {
+							scheduleUnit.setSubject(getSubjectById(line[2]));
+							scheduleUnit.setLocation(line[3]);
+							scheduleUnit.setPerson(getTeacherById(line[4]));
+							scheduleUnit.setGroup(getGroupById(line[5]));
+							return scheduleUnit;
+						} catch (Exception e) {
+							log.error("getAllScheduleUnits[2]: error: {}", e.getMessage());
+						}
+						return scheduleUnit;
+					}).collect(Collectors.toList());
+		} catch (IOException | CsvException e) {
+			log.error("getAllScheduleUnits[3]: error: {}", e.getMessage());
+		}
+		return Collections.emptyList();
 	}
 
 	/**

@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class FileUtil {
-	private static final Logger log = LogManager.getLogger(FileUtil.class);
+	private static final Logger log = LogManager.getLogger(FileUtil.class.getName());
 
 	public static void createFileIfNotExists(String filePath) throws IOException {
 		File file = new File(filePath);

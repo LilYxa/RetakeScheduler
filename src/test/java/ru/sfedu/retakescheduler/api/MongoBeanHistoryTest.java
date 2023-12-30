@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MongoBeanHistoryTest {
-	private static final Logger log = LogManager.getLogger(MongoBeanHistoryTest.class);
+	private static final Logger log = LogManager.getLogger(MongoBeanHistoryTest.class.getName());
 
 	@Test
 	public void testObjectToJsonArray() {

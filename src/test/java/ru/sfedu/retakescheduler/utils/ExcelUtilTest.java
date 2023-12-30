@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class ExcelUtilTest {
-	private static final Logger log = LogManager.getLogger(ExcelUtil.class);
+	private static final Logger log = LogManager.getLogger(ExcelUtil.class.getName());
 
 	@Test
 	public void testReadFromExcel() throws IOException {

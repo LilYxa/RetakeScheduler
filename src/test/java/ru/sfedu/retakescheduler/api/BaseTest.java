@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Random;
 
 public class BaseTest {
-	private static final Logger log = LogManager.getLogger(BaseTest.class);
+	private static final Logger log = LogManager.getLogger(BaseTest.class.getName());
 
 	Student student1 = createStudent("Ivanov", "Ivan", "Ivanovich", "ivanov@mail.ru", "53b51af6-04df-4af5-8bdb-499436bc575a", 77.5);
 	Student student2 = createStudent("Petrov", "Petr", "Petrovich", "petrov@mail.ru", "8bccaa52-ef8c-4b1a-879f-10c6dfea861d", 94.6);
@@ -37,9 +37,13 @@ public class BaseTest {
 	Subject subject3 = createSubject("q2dw1kjb", "История", "Экзамен");
 	Subject testSubjectForSchedule = createSubject("1wfwef-hbehdh-qwwqq-dw1sqs", "Test Subject", "Test Type");
 
-	ScheduleUnit scheduleUnit = createSchedule("jknkjwndkcjnwkdjcn", LocalDateTime.of(2023, 12, 12, 12, 12), "q2dw1", "location", "teach1", "22ВТ-12.03.01.01-о1");
-	ScheduleUnit scheduleUnit2 = createSchedule("jknkjwndk", LocalDateTime.of(2023, 12, 14, 12, 12), "q2dw1fddxfd", "location", "teach2", "22ВТ-12.03.01.01-о2");
-	ScheduleUnit scheduleUnit3 = createSchedule("okwokdmwok", LocalDateTime.of(2023, 12, 11, 12, 12), "q2dw1kjb", "location", "teach3", "22ВТ-12.03.01.01-о3");
+//	ScheduleUnit scheduleUnit = createSchedule("jknkjwndkcjnwkdjcn", LocalDateTime.of(2023, 12, 12, 12, 12), "q2dw1", "location", "teach1", "22ВТ-12.03.01.01-о1");
+//	ScheduleUnit scheduleUnit2 = createSchedule("jknkjwndk", LocalDateTime.of(2023, 12, 14, 12, 12), "q2dw1fddxfd", "location", "teach2", "22ВТ-12.03.01.01-о2");
+//	ScheduleUnit scheduleUnit3 = createSchedule("okwokdmwok", LocalDateTime.of(2023, 12, 11, 12, 12), "q2dw1kjb", "location", "teach3", "22ВТ-12.03.01.01-о3");
+	ScheduleUnit scheduleUnit = createSchedule("jknkjwndkcjnwkdjcn", LocalDateTime.of(2023, 12, 12, 12, 12), subject, "location", teacher, group);
+	ScheduleUnit scheduleUnit2 = createSchedule("jknkjwndk", LocalDateTime.of(2023, 12, 14, 12, 12), subject2, "location", teacher2, group2);
+	ScheduleUnit scheduleUnit3 = createSchedule("okwokdmwok", LocalDateTime.of(2023, 12, 11, 12, 12), subject3, "location", teacher3, group3);
+
 
 	static protected Student createStudent(
 			String lastName,
@@ -76,12 +80,12 @@ public class BaseTest {
 	static protected ScheduleUnit createSchedule(
 			String scheduleUnitId,
 			LocalDateTime dateTime,
-			String subjectId,
+			Subject subject,
 			String location,
-			String personId,
-			String groupNumber
+			Person person,
+			Group group
 	) {
-		return new ScheduleUnit(scheduleUnitId, dateTime, subjectId, location, personId, groupNumber);
+		return new ScheduleUnit(scheduleUnitId, dateTime, subject, location, person, group);
 	}
 
 	static protected Subject createSubject(

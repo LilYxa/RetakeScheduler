@@ -24,57 +24,39 @@ public class ScheduleUnit {
 	@CsvBindByPosition(position = 1)
 	@CsvDate(value = "yyyy-MM-dd'T'HH:mm")
 	private LocalDateTime dateTime;
-	@XmlElement(name = "subjectId")
+	@XmlElement(name = "subject")
 	@CsvBindByPosition(position = 2)
-//	private Subject subject;
-	private String subjectId;
+	private Subject subject;
 	@XmlElement(name = "location")
 	@CsvBindByPosition(position = 3)
 	private String location;
-	@XmlElement(name = "personId")
+	@XmlElement(name = "person")
 	@CsvBindByPosition(position = 4)
-//	private Person person;
-	private String personId;
-	@XmlElement(name = "groupNumber")
+	private Person person;
+	@XmlElement(name = "group")
 	@CsvBindByPosition(position = 5)
-//	private Group group;
-	private String groupNumber;
+	private Group group;
 
 	public ScheduleUnit() {
 		this.scheduleUnitId = UUID.randomUUID().toString();
 	}
 
-	public ScheduleUnit(String id, LocalDateTime dateTime, String subjectId, String location, String personId, String groupId) {
+	public ScheduleUnit(String id, LocalDateTime dateTime, Subject subject, String location, Person person, Group group) {
 		this.scheduleUnitId = id;
 		this.dateTime = dateTime;
-//		this.subject = subject;
-		this.subjectId = subjectId;
+		this.subject = subject;
 		this.location = location;
-//		this.person = person;
-		this.personId = personId;
-//		this.group = group;
-		this.groupNumber = groupId;
+		this.person = person;
+		this.group = group;
 	}
 
-//	public ScheduleUnit(LocalDateTime dateTime, Subject subject, String location, Person person, Group group) {
-//		this.scheduleUnitId = UUID.randomUUID().toString();
-//		this.dateTime = dateTime;
-//		this.subject = subject;
-//		this.location = location;
-//		this.person = person;
-//		this.group = group;
-//	}
-
-	public ScheduleUnit(LocalDateTime dateTime, String subjectId, String location, String personId, String groupId) {
+	public ScheduleUnit(LocalDateTime dateTime, Subject subject, String location, Person person, Group group) {
 		this.scheduleUnitId = UUID.randomUUID().toString();
 		this.dateTime = dateTime;
-//		this.subject = subject;
-		this.subjectId = subjectId;
+		this.subject = subject;
 		this.location = location;
-//		this.person = person;
-		this.personId = personId;
-//		this.group = group;
-		this.groupNumber = groupId;
+		this.person = person;
+		this.group = group;
 	}
 
 	public String getScheduleUnitId() {
@@ -93,12 +75,12 @@ public class ScheduleUnit {
 		this.dateTime = dateTime;
 	}
 
-	public String getSubjectId() {
-		return subjectId;
+	public Subject getSubject() {
+		return subject;
 	}
 
-	public void setSubjectId(String subjectId) {
-		this.subjectId = subjectId;
+	public void setSubject(Subject subject) {
+		this.subject = subject;
 	}
 
 	public String getLocation() {
@@ -109,20 +91,20 @@ public class ScheduleUnit {
 		this.location = location;
 	}
 
-	public String getPersonId() {
-		return personId;
+	public Person getPerson() {
+		return person;
 	}
 
-	public void setPersonId(String personId) {
-		this.personId = personId;
+	public void setPerson(Person person) {
+		this.person = person;
 	}
 
-	public String getGroupNumber() {
-		return groupNumber;
+	public Group getGroup() {
+		return group;
 	}
 
-	public void setGroupNumber(String groupNumber) {
-		this.groupNumber = groupNumber;
+	public void setGroup(Group group) {
+		this.group = group;
 	}
 
 	@Override
@@ -130,12 +112,12 @@ public class ScheduleUnit {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ScheduleUnit that = (ScheduleUnit) o;
-		return Objects.equals(scheduleUnitId, that.scheduleUnitId) && Objects.equals(dateTime, that.dateTime) && Objects.equals(subjectId, that.subjectId) && Objects.equals(location, that.location) && Objects.equals(personId, that.personId) && Objects.equals(groupNumber, that.groupNumber);
+		return Objects.equals(scheduleUnitId, that.scheduleUnitId) && Objects.equals(dateTime, that.dateTime) && Objects.equals(subject, that.subject) && Objects.equals(location, that.location) && Objects.equals(person, that.person) && Objects.equals(group, that.group);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(scheduleUnitId, dateTime, subjectId, location, personId, groupNumber);
+		return Objects.hash(scheduleUnitId, dateTime, subject, location, person, group);
 	}
 
 	@Override
@@ -143,10 +125,10 @@ public class ScheduleUnit {
 		return "ScheduleUnit{" +
 				"scheduleUnitId='" + scheduleUnitId + '\'' +
 				", dateTime=" + dateTime +
-				", subjectId='" + subjectId + '\'' +
+				", subject=" + subject +
 				", location='" + location + '\'' +
-				", personId='" + personId + '\'' +
-				", groupNumber='" + groupNumber + '\'' +
+				", person=" + person +
+				", group=" + group +
 				'}';
 	}
 }

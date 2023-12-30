@@ -15,10 +15,9 @@ import java.util.List;
 import java.util.Random;
 
 public class ScheduleUtil {
-	private static final Logger log = LogManager.getLogger(ScheduleUnit.class);
+	private static final Logger log = LogManager.getLogger(ScheduleUnit.class.getName());
 	public static Schedule createTestSchedule(IDataProvider dataProvider) {
 		List<ScheduleUnit> schedule = new ArrayList<>();
-		Random random = new Random();
 
 		LocalDateTime currentDate = LocalDateTime.of(2023, 11, 27, 8, 0);
 		LocalDateTime endDate = LocalDateTime.of(2023, 12, 1, 17, 25);
@@ -42,25 +41,19 @@ public class ScheduleUtil {
 					// Определяем номер пары на основе текущего значения
 					scheduleUnit.setDateTime(currentDate);
 
-//					Subject testSubject = new Subject("1wfwef-hbehdh-qwwqq-dw1sqs","Test Subject", "Test Type");
 					Subject testSubject = testSubjects.get(0);
-					scheduleUnit.setSubjectId(testSubject.getSubjectId());
+					scheduleUnit.setSubject(testSubject);
 
 					scheduleUnit.setLocation("Classroom 101");
 
-					LocalDate currentLocalDate = LocalDate.now();
-					int randomDays = random.nextInt(7);
-					LocalDate randomDate = currentLocalDate.plusDays(randomDays);
-//					Teacher teacher = new Teacher("Doe", "John", "Johnovich", "john@mail.ru", "4e61290b-c004-491e-8c7a-ee194711ee47", randomDate);
 					Teacher teacher = testTeachers.get(0);
-					scheduleUnit.setPersonId(teacher.getTeacherId());
+					scheduleUnit.setPerson(teacher);
 
-//					List<Group> testGroups = dataProvider.getAllGroups();
 					Group testGroup = testGroups.stream()
 							.skip(new Random().nextInt(testGroups.size()))
 							.findFirst()
 							.get();
-					scheduleUnit.setGroupNumber(testGroup.getGroupNumber());
+					scheduleUnit.setGroup(testGroup);
 
 					schedule.add(scheduleUnit);
 

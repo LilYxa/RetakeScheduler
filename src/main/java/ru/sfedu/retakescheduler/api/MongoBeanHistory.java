@@ -27,7 +27,7 @@ import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.getProperty;
 public class MongoBeanHistory {
 	private MongoDatabase database;
 	private HistoryContent historyContent;
-	private static final Logger log = LogManager.getLogger(MongoBeanHistory.class);
+	private static final Logger log = LogManager.getLogger(MongoBeanHistory.class.getName());
 	private String dbName;
 
 	public MongoBeanHistory() {

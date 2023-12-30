@@ -25,7 +25,7 @@ import static ru.sfedu.retakescheduler.utils.PropertiesConfigUtil.getProperty;
 import static ru.sfedu.retakescheduler.utils.ScheduleUtil.createTestSchedule;
 
 public class DataProviderPostgresTest extends BaseTest {
-	private static final Logger log = LogManager.getLogger(DataProviderPostgresTest.class);
+	private static final Logger log = LogManager.getLogger(DataProviderPostgresTest.class.getName());
 	private static DataProviderPostgres dataProviderPostgres = new DataProviderPostgres();
 
 	@BeforeEach
@@ -627,11 +627,6 @@ public class DataProviderPostgresTest extends BaseTest {
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
 		File file = files.get(0);
 		dataProviderPostgres.dataTransform(file.getPath());
-//		dataProviderPostgres.saveSubject(testSubjectForSchedule);
-//		dataProviderPostgres.saveTeacher(teacherForSchedule);
-//		dataProviderPostgres.saveGroup(group);
-//		dataProviderPostgres.saveGroup(group2);
-//		dataProviderPostgres.saveGroup(group3);
 		Schedule mainSchedule = createTestSchedule(dataProviderPostgres);
 		log.debug("createTestSchedule[2]: test main schedule: {}", mainSchedule);
 		dataProviderPostgres.saveSchedule(mainSchedule);
@@ -641,12 +636,9 @@ public class DataProviderPostgresTest extends BaseTest {
 	@Test
 	public void testCreateSchedule() throws Exception {
 		log.debug("testCreateSchedule[1]: start test");
-//		Schedule schedule = new Schedule(TypeOfSchedule.MAIN, dataProviderXml2.getAllScheduleUnits(TypeOfSchedule.MAIN));
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
 		File file = files.get(0);
 		dataProviderPostgres.dataTransform(file.getPath());
-//		dataProviderPostgres.saveSubject(testSubjectForSchedule);
-//		dataProviderPostgres.saveTeacher(teacherForSchedule);
 		Schedule mainSchedule = createTestSchedule(dataProviderPostgres);
 		LocalDate startDate = LocalDate.of(2023, 11, 27);
 		LocalDate endDate = LocalDate.of(2023, 12, 15);

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class PropertiesConfigUtil {
-	private static final Logger log = LogManager.getLogger(DataProviderPostgres.class);
+	private static final Logger log = LogManager.getLogger(DataProviderPostgres.class.getName());
 	private static String configPath = "";
 	private static final Properties config = new Properties();
 
@@ -35,12 +35,6 @@ public class PropertiesConfigUtil {
 	}
 
 	private static void loadConfiguration() throws IOException {
-//		File file;
-//		if (configPath.isEmpty()) {
-//			file = new File(Constants.PROPERTIES_CONFIG_PATH);
-//		} else {
-//			file = new File(configPath);
-//		}
 		File file = new File(configPath.isEmpty() ? Constants.PROPERTIES_CONFIG_PATH : configPath);
 		try (FileInputStream fileInputStream = new FileInputStream(file)) {
 			config.load(fileInputStream);
