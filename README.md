@@ -2,6 +2,7 @@
 A system that allows you to schedule retakes at the university.
 
 sudo systemctl start mongod.service - запуск MongoDB
+
 sudo systemctl start postgresql.service - запуск PostgreSQL
 
 Excel файл с исходными данными можно расположить по следующему пути: src/main/resources/excel/
