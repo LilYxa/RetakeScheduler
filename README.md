@@ -119,7 +119,7 @@ java -DconfigPath="src/main/resources/environment.properties" -Dlog4jPath="src/m
 java -DconfigPath="src/main/resources/environment.properties" -Dlog4jPath="src/main/resources/log4j2.properties" -jar out/artifacts/RetakeScheduler_jar/RetakeScheduler.jar -dType Postgres -psu
 ```
 
-# Диаграммы
+# UML диаграммы
 ## Диаграмма вариантов использования
 <a name="use-case">![use-case](https://github.com/LilYxa/RetakeScheduler/raw/master/documentation/use-case%20diagram.png)</a>
 
