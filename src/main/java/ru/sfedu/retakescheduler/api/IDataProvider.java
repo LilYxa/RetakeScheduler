@@ -210,6 +210,81 @@ public interface IDataProvider {
 	 * @return An object of type Schedule representing the created schedule.
 	 * @throws Exception If an error occurs during the schedule generation, exporting to Excel, or sending an email.
 	 */
+//	default Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) throws Exception {
+//		log.debug("createSchedule[1]: scheduling retakes from {} to {}", startDate, endDate);
+//		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
+//		File file = files.get(0);
+//		List<ExcelRow> excelRows = dataLoading(file.getPath());
+//
+//		List<Group> groups = getAllGroups();
+//		List<Teacher> teachers = getAllTeachers();
+//		List<Subject> subjects = getAllSubjects();
+//		List<Student> students = getAllStudents();
+//
+//		LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.of(8, 0));
+//		LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.of(17, 50));
+//
+//		TeacherSubjectMapping teacherSubjectMapping = new TeacherSubjectMapping();
+//		fillTeacherSubjectMapping(excelRows, teacherSubjectMapping, teachers, subjects);
+//
+//		List<ScheduleUnit> retakes = new ArrayList<>();
+//
+//		// Продолжительность урока (в минутах)
+//		int lessonDuration = Constants.LESSON_DURATION;
+//
+//		for (LocalDateTime currentDate = startDateTime; !currentDate.isAfter(endDateTime); currentDate = currentDate.plusDays(1)) {
+//			if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+//				for (Subject subject : subjects) {
+//					if (LocalTime.of(currentDate.getHour(), currentDate.getMinute()).isAfter(LocalTime.of(17, 50))) {
+//						currentDate = currentDate.plusDays(1);
+//						if (currentDate.isBefore(endDateTime)) {
+//							currentDate = currentDate.withHour(8).withMinute(0);
+//						} else {
+//							break; // Выход из цикла, если достигнута дата конца
+//						}
+//					}
+//
+//					Group group = findGroupByDiscipline(excelRows, groups, subject);
+//					Teacher teacher = teacherSubjectMapping.getTeacherBySubject(subject);
+//
+//					// Проверка, не занят ли учитель в текущий день
+//					if (teacher != null && !teacher.getBusyDay().equals(currentDate) && !teacher.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
+//						// Проверка, не занята ли группа в текущий день
+//						if (group != null && !group.getBusyDay().equals(currentDate) && !group.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
+//
+//							// Проверка наложения с основным расписанием
+//							if (!isOverlapping(mainSchedule, currentDate, lessonDuration)) {
+//								ScheduleUnit retakeUnit = new ScheduleUnit();
+//								retakeUnit.setSubject(subject);
+//								retakeUnit.setPerson(teacher);
+//								retakeUnit.setLocation("IVTiPT");
+//								retakeUnit.setGroup(group);
+//								retakeUnit.setDateTime(currentDate);
+//
+//								retakes.add(retakeUnit);
+//							}
+//							currentDate = currentDate.plusMinutes(lessonDuration);
+//						}
+//					}
+//				}
+//			}
+//		}
+//		Schedule retakeSchedule = new Schedule(TypeOfSchedule.RETAKE, retakes);
+//
+//		if (sendEmail) {
+//			sendEmail(retakeSchedule, students);
+//		}
+//
+//		if (exportToExcel) {
+//			try {
+//				exportInExcelFormat(retakeSchedule);
+//			} catch (Exception e) {
+//				log.error("createSchedule[2]: error: {}", e.getMessage());
+//			}
+//		}
+//
+//		return retakeSchedule;
+//	}
 	default Schedule createSchedule(Schedule mainSchedule, LocalDate startDate, LocalDate endDate, boolean exportToExcel, boolean sendEmail) throws Exception {
 		log.debug("createSchedule[1]: scheduling retakes from {} to {}", startDate, endDate);
 		List<File> files = FileUtil.getListFilesInFolder(Constants.EXCEL_FOLDER);
@@ -222,54 +297,67 @@ public interface IDataProvider {
 		List<Student> students = getAllStudents();
 
 		LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.of(8, 0));
-		LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.of(17, 50));
 
 		TeacherSubjectMapping teacherSubjectMapping = new TeacherSubjectMapping();
 		fillTeacherSubjectMapping(excelRows, teacherSubjectMapping, teachers, subjects);
+
+		Map<Group, Set<Subject>> subjectGroupMap = fillGroupSubjectMapping(excelRows, groups, subjects);
 
 		List<ScheduleUnit> retakes = new ArrayList<>();
 
 		// Продолжительность урока (в минутах)
 		int lessonDuration = Constants.LESSON_DURATION;
 
-		for (LocalDateTime currentDate = startDateTime; !currentDate.isAfter(endDateTime); currentDate = currentDate.plusDays(1)) {
-			if (currentDate.getDayOfWeek() != DayOfWeek.SATURDAY && currentDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
-				for (Subject subject : subjects) {
-					if (LocalTime.of(currentDate.getHour(), currentDate.getMinute()).isAfter(LocalTime.of(17, 50))) {
-						currentDate = currentDate.plusDays(1);
-						if (currentDate.isBefore(endDateTime)) {
-							currentDate = currentDate.withHour(8).withMinute(0);
-						} else {
-							break; // Выход из цикла, если достигнута дата конца
-						}
-					}
+		Schedule retakeSchedule = new Schedule(TypeOfSchedule.RETAKE);
+		LocalDateTime currentDateTime = startDateTime;
 
-					Group group = findGroupByDiscipline(excelRows, groups, subject);
-					Teacher teacher = teacherSubjectMapping.getTeacherBySubject(subject);
+		while (!subjectGroupMap.isEmpty() && !currentDateTime.toLocalDate().isAfter(endDate)) {
+			if (currentDateTime.getDayOfWeek() != DayOfWeek.SATURDAY && currentDateTime.getDayOfWeek() != DayOfWeek.SUNDAY) {
+				for (Group group : groups) {
+					Set<Subject> groupSubjects = subjectGroupMap.get(group);
 
-					// Проверка, не занят ли учитель в текущий день
-					if (teacher != null && !teacher.getBusyDay().equals(currentDate) && !teacher.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
-						// Проверка, не занята ли группа в текущий день
-						if (group != null && !group.getBusyDay().equals(currentDate) && !group.getBusyDay().getDayOfWeek().equals(currentDate.getDayOfWeek())) {
 
-							// Проверка наложения с основным расписанием
-							if (!isOverlapping(mainSchedule, currentDate, lessonDuration)) {
-								ScheduleUnit retakeUnit = new ScheduleUnit();
-								retakeUnit.setSubject(subject);
-								retakeUnit.setPerson(teacher);
-								retakeUnit.setLocation("IVTiPT");
-								retakeUnit.setGroup(group);
-								retakeUnit.setDateTime(currentDate);
+					if (groupSubjects != null && !groupSubjects.isEmpty()) {
+						Iterator<Subject> it = groupSubjects.iterator();
+						while (it.hasNext()) {
+							Subject subject = it.next();
+							Teacher teacher = teacherSubjectMapping.getTeacherBySubject(subject);
+							if (!teacher.getBusyDay().getDayOfWeek().equals(currentDateTime.getDayOfWeek()) && !group.getBusyDay().getDayOfWeek().equals(currentDateTime.getDayOfWeek())) {
+								if (!isOverlapping(mainSchedule, currentDateTime, lessonDuration, group) && !isOverlapping(retakeSchedule, currentDateTime, lessonDuration, group) && !isTeacherBusy(retakeSchedule, currentDateTime, teacher)) {
+									ScheduleUnit retakeUnit = new ScheduleUnit();
+									retakeUnit.setSubject(subject);
+									retakeUnit.setPerson(teacher);
+									retakeUnit.setLocation("IVTiPT");
+									retakeUnit.setGroup(group);
+									retakeUnit.setDateTime(currentDateTime);
 
-								retakes.add(retakeUnit);
+									retakes.add(retakeUnit);
+									retakeSchedule.setUnits(retakes);
+
+									it.remove();
+
+									if (groupSubjects.isEmpty()) {
+										subjectGroupMap.remove(group);
+									}
+
+								}
 							}
-							currentDate = currentDate.plusMinutes(lessonDuration);
 						}
 					}
 				}
 			}
+
+			currentDateTime = currentDateTime.plusMinutes(Constants.LESSON_DURATION);
+
+			// Если текущее время превышает 17:50
+			if (currentDateTime.getHour() > 17 || (currentDateTime.getHour() == 17 && currentDateTime.getMinute() > 50)) {
+
+				// Переходим к следующему дню и устанавливаем время на 8:00
+				currentDateTime = currentDateTime.plusDays(1).withHour(8).withMinute(0);
+			}
 		}
-		Schedule retakeSchedule = new Schedule(TypeOfSchedule.RETAKE, retakes);
+
+
 
 		if (sendEmail) {
 			sendEmail(retakeSchedule, students);
@@ -287,29 +375,113 @@ public interface IDataProvider {
 	}
 
 	/**
-	 * Checks for overlapping time intervals between the given start time and duration
-	 * with the units in the main schedule.
+	 * Fills a mapping between groups and subjects based on the information provided in a list of Excel rows.
 	 *
-	 * @param mainSchedule  The main schedule to check for overlapping units.
-	 * @param startTime     The start time of the retake schedule unit.
-	 * @param lessonDuration The duration of the retake schedule unit in minutes.
-	 * @return {@code true} if there is an overlap with the main schedule, {@code false} otherwise.
+	 * This method takes a list of Excel rows, a list of groups, and a list of subjects as input, and iterates through
+	 * the Excel rows to determine the groups and subjects associated with them. The mapping is then stored in a
+	 * {@code Map<Group, Set<Subject>>} where each group is associated with a set of subjects that the group is
+	 * responsible for.
 	 *
-	 * <p>
-	 * This method compares the specified start time and duration with each unit in the main schedule.
-	 * It returns {@code true} if there is any overlapping time interval between the specified time
-	 * range and the units in the main schedule, and {@code false} otherwise.
-	 * </p>
+	 * @param excelRows  The list of Excel rows containing information about teachers, groups, and disciplines.
+	 * @param groups     The list of groups to match against the group information in Excel rows.
+	 * @param subjects   The list of subjects to match against the discipline information in Excel rows.
+	 * @return A mapping between groups and subjects, where each group is associated with a set of subjects.
+	 * @see ExcelRow
+	 * @see Group
+	 * @see Subject
 	 */
-	private boolean isOverlapping(Schedule mainSchedule, LocalDateTime startTime, int lessonDuration) {
+	private static Map<Group, Set<Subject>> fillGroupSubjectMapping(List<ExcelRow> excelRows, List<Group> groups, List<Subject> subjects) {
+		Map<Group, Set<Subject>> subjectGroupMap = new HashMap<>();
+
+		for (ExcelRow excelRow : excelRows) {
+			String[] teacherNameArr = excelRow.getTeacherName().split(" ");
+			if (teacherNameArr.length == 1)
+				continue;
+
+			String group = excelRow.getGroup();
+			String discipline = excelRow.getDiscipline();
+
+			Optional<Group> optionalGroup = groups.stream()
+					.filter(group1 -> group1.getGroupNumber().equals(group))
+					.findFirst();
+
+			Optional<Subject> optionalSubject = subjects.stream()
+					.filter(subject -> subject.getSubjectName().equals(discipline))
+					.findFirst();
+
+			if (optionalGroup.isPresent() && optionalSubject.isPresent()) {
+				Group group1 = optionalGroup.get();
+				Subject subject = optionalSubject.get();
+
+				// Получаем или создаем множество предметов для данной группы
+//				Set<Group> groupSet = subjectGroupMap.computeIfAbsent(subject, k -> new HashSet<>());
+				Set<Subject> subjectSet = subjectGroupMap.computeIfAbsent(group1, k -> new HashSet<>());
+
+				// Добавляем текущую группу в множество
+				subjectSet.add(subject);
+			}
+		}
+
+		return subjectGroupMap;
+	}
+
+	/**
+	 * Checks if there is any overlap between a given schedule and an existing schedule for a specific group
+	 * during a specified time period.
+	 * <p>
+	 * This method is designed to determine if a new schedule, defined by a start time, lesson duration, and group,
+	 * overlaps with any existing schedule units in the provided schedule object. An overlap is considered to occur if
+	 * there is a time conflict between the new schedule unit and any existing schedule unit for the given group.
+	 * </p>
+	 * @param schedule       The main schedule to check for overlaps against.
+	 * @param startTime      The start time of the new schedule unit.
+	 * @param lessonDuration The duration of the lesson in minutes for the new schedule unit.
+	 * @param group          The group for which the new schedule unit is being checked.
+	 * @return {@code true} if there is an overlap, {@code false} otherwise.
+	 * @see Schedule
+	 * @see ScheduleUnit
+	 * @see LocalDateTime
+	 * @see Group
+	 */
+	private boolean isOverlapping(Schedule schedule, LocalDateTime startTime, int lessonDuration, Group group) {
 		LocalDateTime endTime = startTime.plusMinutes(lessonDuration);
+		if (schedule.getUnits() == null) return false;
 
-		return mainSchedule.getUnits().stream()
-				.anyMatch(mainSubject -> {
-					LocalDateTime mainStartTime = mainSubject.getDateTime();
-					LocalDateTime mainEndTime = mainStartTime.plusMinutes(lessonDuration);
+		return schedule.getUnits().stream()
+			.anyMatch(subject -> {
+				LocalDateTime mainStartTime = subject.getDateTime();
+				LocalDateTime mainEndTime = mainStartTime.plusMinutes(lessonDuration);
 
-					return startTime.isBefore(mainEndTime) && endTime.isAfter(mainStartTime);
+				return startTime.isBefore(mainEndTime) && endTime.isAfter(mainStartTime) && subject.getGroup().equals(group);
+			});
+	}
+
+	/**
+	 * Checks whether a given teacher is busy at a specific time in the provided schedule.
+	 * <p>
+	 * This method examines the schedule units within the provided schedule to determine if the specified teacher is
+	 * already occupied at the given time. If the schedule or its units are null, the method returns false, indicating
+	 * that the teacher is not considered busy. Otherwise, the method checks each schedule unit's time and associated
+	 * teacher, searching for a match with the provided time and teacher. If a match is found, indicating that the teacher
+	 * is already scheduled at that time, the method returns true; otherwise, it returns false.
+	 * </p>
+	 * @param schedule The schedule to check for the teacher's availability.
+	 * @param time     The specific time for which the teacher's availability is being checked.
+	 * @param teacher  The teacher for whom the availability is being checked.
+	 * @return {@code true} if the teacher is busy at the specified time, {@code false} otherwise.
+	 * @see Schedule
+	 * @see ScheduleUnit
+	 * @see LocalDateTime
+	 * @see Teacher
+	 */
+	private boolean isTeacherBusy(Schedule schedule, LocalDateTime time, Teacher teacher) {
+		if (schedule.getUnits() == null) return false;
+
+		return schedule.getUnits().stream()
+				.anyMatch(subject -> {
+					LocalDateTime scheduleTime = subject.getDateTime();
+
+					return time.equals(scheduleTime) && subject.getPerson().equals(teacher);
 				});
 	}
 

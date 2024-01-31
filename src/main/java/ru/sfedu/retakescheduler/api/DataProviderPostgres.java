@@ -850,6 +850,6 @@ public class DataProviderPostgres implements IDataProvider{
 		saveEntities(teachers, Constants.SQL_INSERT_TEACHER_TEST, new TeacherEntityMapper());
 		saveEntities(subjects, Constants.SQL_INSERT_SUBJECT_TEST, new SubjectEntityMapper());
 		saveGroups(groups);
-		log.debug("dataTransform[3]: records were saved in PostgresDB files");
+		log.debug("dataTransform[3]: records were saved in PostgresDB");
 	}
 }
